@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN apt update -y && apt install -y openssl
+RUN apt-get update -y && apt install -y openssl debian-openssl
 
 RUN npm install --omit=dev
 
