@@ -1,8 +1,9 @@
 // This page is rendered if the study code entered in the "postuler" url is invalid
 
+import Link from 'next/link';
+
 import { ErrorPage } from '@/components/error';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 const linkToRectuiringStudies = (
     <Button variant={'link'} asChild>
