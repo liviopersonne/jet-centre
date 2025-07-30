@@ -5,6 +5,7 @@
 /// Adds support and types for interacting with prisma from typescript.
 generator client {
     provider = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 /// Indicates how to access the database.
