@@ -1,11 +1,27 @@
 'use server';
 
-import { Domain, Level, MriStatus } from '@prisma/client';
+import { Domain, Level, Mri, MriStatus } from '@prisma/client';
 
 import prisma from '@/db';
 import { dbg } from '@/lib/utils';
 
 import { adminDisplay, DEFAULT_MRI_VALUES, MriFormType, MriServerData } from './schema';
+
+export async function loadStudyMris(studyCode: string): Promise<Mri[] | undefined> {
+    try {
+        return await prisma.mri.findMany({
+            where: {
+                study: {
+                    information: {
+                        code: studyCode,
+                    },
+                },
+            },
+        });
+    } catch (e) {
+        console.error(`[loadMriData] ${e}`);
+    }
+}
 
 export async function loadMriData(code: string): Promise<MriServerData | undefined> {
     try {
@@ -33,9 +49,9 @@ export async function loadMriData(code: string): Promise<MriServerData | undefin
         if (!study) {
             throw new Error('studyInfo exists without study.');
         }
-        const mri = study.mri;
+        const mri = study.mri[0];
         const data: MriFormType = {
-            title: infos.title ?? '',
+            title: mri?.title ?? '',
             wageLowerBound: mri?.wageLowerBound ?? 0,
             wageUpperBound: mri?.wageUpperBound ?? 0,
             wageLevel: mri?.wageLevel ?? Level.Low,

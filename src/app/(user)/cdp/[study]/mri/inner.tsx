@@ -1,18 +1,27 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MriStatus } from '@prisma/client';
-import { useState } from 'react';
+import { Mri, MriStatus } from '@prisma/client';
+import { useEffect, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 
-import { Box, BoxContent, BoxHeader, BoxTitle } from '@/components/boxes/boxes';
+import {
+    Box,
+    BoxButtonPlus,
+    BoxCollapseButton,
+    BoxCollapser,
+    BoxContent,
+    BoxHeader,
+    BoxTitle,
+} from '@/components/boxes/boxes';
 import { UpdateBox, UpdateBoxStatus } from '@/components/boxes/update-box';
 import { LoadingFullStops } from '@/components/loading';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
-import { loadMriData, setMriStatus, storeMriData } from './form/mri';
+import { loadMriData, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
 import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
 import { RenderMRI } from './render';
 
@@ -30,6 +39,8 @@ export default function Inner({ study, serverMriData }: InnerProps) {
     const mri = form.watch();
 
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
+
+    const [collapse, setCollapse] = useState(false);
 
     const updateServer = () => {
         setStatus(UpdateBoxStatus.Loading);
@@ -53,32 +64,117 @@ export default function Inner({ study, serverMriData }: InnerProps) {
     };
 
     return (
-        <div className="flex space-x-main h-full">
-            <UpdateBox
-                status={status}
-                update={updateServer}
-                title="Écriture du MRI"
-                editable={serverMriData.status === MriStatus.InProgress}
-            >
-                <MriEditorContent
-                    setNotSaved={setNotSaved}
-                    form={form}
-                    updateServer={updateServer}
-                    serverMriId={serverMriData.mriId}
-                    status={serverMriData.status}
-                    study={study}
-                />
-            </UpdateBox>
+        <div className="flex flex-col space-y-main w-full">
             <Box className="w-full">
                 <BoxHeader>
-                    <BoxTitle>Prévisualisation du MRI</BoxTitle>
+                    <BoxTitle>Choix du MRI</BoxTitle>
+                    <BoxCollapseButton
+                        collapse={collapse}
+                        setCollapse={setCollapse}
+                    ></BoxCollapseButton>
                 </BoxHeader>
-                <BoxContent height="limited" noPadding>
-                    <RenderMRI mri={mri} study={study} admins={serverMriData.admins || []} />
-                </BoxContent>
+                <BoxCollapser collapse={collapse}>
+                    <BoxContent>
+                        <MriSelector studyCode={study} />
+                    </BoxContent>
+                </BoxCollapser>
             </Box>
+            <div className="flex space-x-main h-full">
+                <UpdateBox
+                    status={status}
+                    update={updateServer}
+                    title="Écriture du MRI"
+                    editable={serverMriData.status === MriStatus.InProgress}
+                >
+                    <MriEditorContent
+                        setNotSaved={setNotSaved}
+                        form={form}
+                        updateServer={updateServer}
+                        serverMriId={serverMriData.mriId}
+                        status={serverMriData.status}
+                        study={study}
+                    />
+                </UpdateBox>
+                <Box className="w-full">
+                    <BoxHeader>
+                        <BoxTitle>Prévisualisation du MRI</BoxTitle>
+                    </BoxHeader>
+                    <BoxContent height="limited" noPadding>
+                        <RenderMRI mri={mri} study={study} admins={serverMriData.admins || []} />
+                    </BoxContent>
+                </Box>
+            </div>
         </div>
     );
+}
+
+interface MriSelectorProps {
+    studyCode: string;
+}
+
+function MriSelector({ studyCode }: MriSelectorProps) {
+    const [loading, setLoading] = useState(true);
+    const [mris, setMris] = useState<Mri[] | undefined>();
+    const [selectedId, setSelectedId] = useState<string>();
+
+    useEffect(() => {
+        loadStudyMris(studyCode).then((data) => {
+            setMris(data);
+            setLoading(false);
+        });
+    }, [studyCode]);
+
+    const getStatusColor = (status: MriStatus) => {
+        switch (status) {
+            case 'InProgress':
+                return 'yellow';
+            case 'Finished':
+                return 'green';
+            case 'Validated':
+                return 'darkgreen';
+            case 'Sent':
+                return 'blue';
+            case 'Expired':
+                return 'purple';
+            default:
+                return 'white';
+        }
+    };
+
+    if (loading) {
+        return <LoadingFullStops />;
+    } else {
+        if (mris === undefined) {
+            return <p>Error loading mris !</p>;
+        } else {
+            // TODO: Set selectedId to the first available mri, and create it if it doesn't exist
+            return (
+                <div className="flex flex-col w-full items-center">
+                    <ToggleGroup
+                        type="single"
+                        unselectable="off"
+                        value="selectedId"
+                        onValueChange={(newValue) => {
+                            // TODO: Load correct MRI
+                            if (newValue) setSelectedId(newValue);
+                        }}
+                    >
+                        {mris.map((mri, i) => (
+                            <ToggleGroupItem
+                                value={mri.id}
+                                key={i}
+                                color={getStatusColor(mri.status)}
+                            >
+                                {mri.title ?? 'Untitled MRI'}
+                            </ToggleGroupItem>
+                        ))}
+                    </ToggleGroup>
+                    <BoxButtonPlus onClick={() => {}} bg-black />
+                    <p>Selected item {selectedId}</p> {/* TODO: Remove */}
+                </div>
+            );
+        }
+    }
 }
 
 interface MriEditorContentProps {
