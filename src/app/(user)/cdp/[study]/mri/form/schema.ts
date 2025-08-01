@@ -11,7 +11,7 @@ export interface AdminDisplay {
 export interface MriServerData {
     data: MriFormType;
     admins: AdminDisplay[];
-    mriId?: string;
+    mriId: string;
     status: MriStatus;
 }
 
@@ -37,6 +37,12 @@ export const mriCreationSchema = z.object({
 export type MriFormType = z.infer<typeof mriCreationSchema>;
 
 export const DEFAULT_MRI_VALUES = {
+    title: 'Mri sans titre',
+    wageLowerBound: 0,
+    wageUpperBound: 0,
+    wageLevel: Level.Low,
+    difficulty: Level.Low,
+    mainDomain: Domain.EmbeddedSystems,
     introductionText: 'Nous vous proposons une étude...',
     requiredSkillsText: 'Nous recherchons un.e intervenant.e ayant des compétences en...',
     timeLapsText: 'Le client désire commencer le plus tôt possible.',
