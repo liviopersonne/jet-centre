@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mri, MriStatus } from '@prisma/client';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 
 import {
@@ -42,6 +42,8 @@ export default function Inner({ study, serverMriData }: InnerProps) {
 
     const [collapse, setCollapse] = useState(false);
 
+    const [selectedMriId, setSelectedMriId] = useState<string>();
+
     const updateServer = () => {
         setStatus(UpdateBoxStatus.Loading);
         const formData = form.watch();
@@ -75,7 +77,11 @@ export default function Inner({ study, serverMriData }: InnerProps) {
                 </BoxHeader>
                 <BoxCollapser collapse={collapse}>
                     <BoxContent>
-                        <MriSelector studyCode={study} />
+                        <MriSelector
+                            studyCode={study}
+                            selectedId={selectedMriId}
+                            setSelectedId={setSelectedMriId}
+                        />
                     </BoxContent>
                 </BoxCollapser>
             </Box>
@@ -110,12 +116,13 @@ export default function Inner({ study, serverMriData }: InnerProps) {
 
 interface MriSelectorProps {
     studyCode: string;
+    selectedId: string | undefined;
+    setSelectedId: Dispatch<SetStateAction<string | undefined>>;
 }
 
-function MriSelector({ studyCode }: MriSelectorProps) {
+function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps) {
     const [loading, setLoading] = useState(true);
     const [mris, setMris] = useState<Mri[] | undefined>();
-    const [selectedId, setSelectedId] = useState<string>();
 
     useEffect(() => {
         loadStudyMris(studyCode).then((data) => {
