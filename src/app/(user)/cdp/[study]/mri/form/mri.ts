@@ -1,29 +1,14 @@
 'use server';
 
-import { Domain, Level, Mri, MriStatus } from '@prisma/client';
+import { MriStatus } from '@prisma/client';
 
 import prisma from '@/db';
 import { dbg } from '@/lib/utils';
 
 import { adminDisplay, DEFAULT_MRI_VALUES, MriFormType, MriServerData } from './schema';
 
-export async function loadStudyMris(studyCode: string): Promise<Mri[] | undefined> {
-    try {
-        return await prisma.mri.findMany({
-            where: {
-                study: {
-                    information: {
-                        code: studyCode,
-                    },
-                },
-            },
-        });
-    } catch (e) {
-        console.error(`[loadMriData] ${e}`);
-    }
-}
-
-export async function loadMriData(code: string): Promise<MriServerData | undefined> {
+// TODO: Replace loadMriData by loadStudyMris
+export async function loadStudyMris(code: string): Promise<MriServerData[] | undefined> {
     try {
         const infos = await prisma.studyInfos.findUnique({
             where: { code },
@@ -49,33 +34,42 @@ export async function loadMriData(code: string): Promise<MriServerData | undefin
         if (!study) {
             throw new Error('studyInfo exists without study.');
         }
-        const mri = study.mri[0];
-        const data: MriFormType = {
-            title: mri?.title ?? '',
-            wageLowerBound: mri?.wageLowerBound ?? 0,
-            wageUpperBound: mri?.wageUpperBound ?? 0,
-            wageLevel: mri?.wageLevel ?? Level.Low,
-            difficulty: mri?.difficulty ?? Level.Low,
-            mainDomain: mri?.mainDomain || infos.domains[0] || Domain.EmbeddedSystems,
-            introductionText: mri?.introductionText ?? DEFAULT_MRI_VALUES.introductionText,
-            descriptionText: mri?.descriptionText ?? DEFAULT_MRI_VALUES.descriptionText,
-            timeLapsText: mri?.timeLapsText ?? DEFAULT_MRI_VALUES.timeLapsText,
-            requiredSkillsText: mri?.requiredSkillsText ?? DEFAULT_MRI_VALUES.requiredSkillsText,
-        };
-        return {
-            mriId: mri?.id,
-            admins: study.cdps.map(adminDisplay),
-            data,
-            status: mri?.status || MriStatus.InProgress,
-        };
+        const mris = study.mri;
+        return mris.map((mri) => {
+            const data: MriFormType = {
+                title: mri?.title || infos?.title || DEFAULT_MRI_VALUES.title,
+                wageLowerBound: mri?.wageLowerBound ?? DEFAULT_MRI_VALUES.wageLowerBound,
+                wageUpperBound: mri?.wageUpperBound ?? DEFAULT_MRI_VALUES.wageUpperBound,
+                wageLevel: mri?.wageLevel ?? DEFAULT_MRI_VALUES.wageLevel,
+                difficulty: mri?.difficulty ?? DEFAULT_MRI_VALUES.difficulty,
+                mainDomain: mri?.mainDomain || infos.domains[0] || DEFAULT_MRI_VALUES.mainDomain,
+                introductionText: mri?.introductionText ?? DEFAULT_MRI_VALUES.introductionText,
+                descriptionText: mri?.descriptionText ?? DEFAULT_MRI_VALUES.descriptionText,
+                timeLapsText: mri?.timeLapsText ?? DEFAULT_MRI_VALUES.timeLapsText,
+                requiredSkillsText:
+                    mri?.requiredSkillsText ?? DEFAULT_MRI_VALUES.requiredSkillsText,
+            };
+            return {
+                mriId: mri.id,
+                admins: study.cdps.map(adminDisplay),
+                data,
+                status: mri?.status || MriStatus.InProgress,
+            };
+        });
     } catch (e) {
-        console.error(`[loadMriData] ${e}`);
+        console.error(`[loadStudyMris] ${e}`);
     }
 }
 
-export async function storeMriData(code: string, data: MriFormType): Promise<string | undefined> {
+// TODO: Adapt
+export async function storeMriData(
+    mriId: string | undefined,
+    studyCode: string,
+    data: MriFormType
+): Promise<string | undefined> {
     try {
         const mriData = {
+            title: data.title,
             wageLowerBound: data.wageLowerBound,
             wageUpperBound: data.wageUpperBound,
             wageLevel: data.wageLevel,
@@ -90,30 +84,21 @@ export async function storeMriData(code: string, data: MriFormType): Promise<str
 
         dbg(mriData, 'storing');
 
-        const studyInfos = await prisma.studyInfos.update({
-            where: { code },
-            include: {
-                study: {
-                    include: {
-                        mri: true,
-                    },
+        if (mriId !== undefined) {
+            const updatedMri = await prisma.mri.update({
+                where: { id: mriId },
+                data: { ...mriData },
+            });
+            return updatedMri.id;
+        } else {
+            const newMri = await prisma.mri.create({
+                data: {
+                    studyId: studyCode,
+                    ...mriData,
                 },
-            },
-            data: {
-                title: data.title,
-                study: {
-                    update: {
-                        mri: {
-                            upsert: {
-                                create: { ...mriData },
-                                update: { ...mriData },
-                            },
-                        },
-                    },
-                },
-            },
-        });
-        return studyInfos.study?.mri?.id;
+            });
+            return newMri.id;
+        }
     } catch (e) {
         console.error(`[storeMriData] ${e}`);
     }

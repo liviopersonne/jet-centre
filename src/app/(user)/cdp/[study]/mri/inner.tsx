@@ -122,7 +122,7 @@ interface MriSelectorProps {
 
 function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps) {
     const [loading, setLoading] = useState(true);
-    const [mris, setMris] = useState<Mri[] | undefined>();
+    const [mris, setMris] = useState<MriServerData[] | undefined>();
 
     useEffect(() => {
         loadStudyMris(studyCode).then((data) => {
