@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mri, MriStatus } from '@prisma/client';
+import { MriStatus } from '@prisma/client';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 
@@ -21,7 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
-import { loadMriData, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
+import { loadStudyMris, setMriStatus, storeMriData } from './form/mri';
 import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
 import { RenderMRI } from './render';
 
@@ -29,6 +29,10 @@ interface InnerProps {
     study: string;
     serverMriData: MriServerData;
 }
+
+// TODO: Initialise with undefined mri id if none is found
+// TODO: Load correct mri in the form inputs
+// TODO: Load empty mri if mriId is undefined
 
 export default function Inner({ study, serverMriData }: InnerProps) {
     const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
@@ -47,13 +51,21 @@ export default function Inner({ study, serverMriData }: InnerProps) {
     const updateServer = () => {
         setStatus(UpdateBoxStatus.Loading);
         const formData = form.watch();
-        storeMriData(study, formData).then((success) => {
-            if (!success) {
+        storeMriData(selectedMriId, study, formData).then((updatedMriId) => {
+            if (!updatedMriId) {
                 setStatus(UpdateBoxStatus.Error);
             }
-            loadMriData(study).then((data) => {
+            if (!selectedMriId) {
+                console.log(
+                    `New MRI was successfully created for study ${study}, id=${updatedMriId}`
+                );
+                // TODO: Reload the mri selector
+                setSelectedMriId(updatedMriId);
+            }
+            loadStudyMris(study).then((data) => {
+                const loadedData = data?.find((value) => value.mriId === updatedMriId);
                 setStatus(
-                    data && equalMri(data?.data, formData)
+                    loadedData && equalMri(loadedData?.data, formData)
                         ? UpdateBoxStatus.Ok
                         : UpdateBoxStatus.NotSynced
                 );
@@ -99,6 +111,7 @@ export default function Inner({ study, serverMriData }: InnerProps) {
                         serverMriId={serverMriData.mriId}
                         status={serverMriData.status}
                         study={study}
+                        mriId={selectedMriId}
                     />
                 </UpdateBox>
                 <Box className="w-full">
@@ -168,11 +181,11 @@ function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps)
                     >
                         {mris.map((mri, i) => (
                             <ToggleGroupItem
-                                value={mri.id}
+                                value={mri.mriId}
                                 key={i}
                                 color={getStatusColor(mri.status)}
                             >
-                                {mri.title ?? 'Untitled MRI'}
+                                {mri.data.title ?? 'Untitled MRI'}
                             </ToggleGroupItem>
                         ))}
                     </ToggleGroup>
@@ -191,6 +204,7 @@ interface MriEditorContentProps {
     status: MriStatus;
     study: string;
     setNotSaved: () => void;
+    mriId: string | undefined;
 }
 
 function MriEditorContent({
@@ -200,6 +214,7 @@ function MriEditorContent({
     serverMriId,
     status,
     study,
+    mriId,
 }: MriEditorContentProps) {
     const [loading, setLoading] = useState(false);
 
@@ -252,21 +267,34 @@ function MriEditorContent({
                         <Button
                             onClick={() => {
                                 setLoading(true);
-                                storeMriData(study, form.watch()).then((mriId) => {
-                                    if (mriId === undefined) {
+                                storeMriData(mriId, study, form.watch()).then((updatedMriId) => {
+                                    if (!updatedMriId) {
                                         setLoading(false);
                                         return;
                                     }
-                                    loadMriData(study).then((data) => {
-                                        if (!data?.data) {
+                                    loadStudyMris(study).then((data) => {
+                                        if (!data) {
                                             setLoading(false);
                                             return;
                                         }
-                                        if (!equalMri(data?.data, form.watch())) {
+                                        const loadedData = data.find(
+                                            (value) => value.mriId === updatedMriId
+                                        );
+                                        if (loadedData === undefined) {
+                                            console.error(
+                                                `[MriEditorContent] Couldn't find an MRI with the correct id "${updatedMriId}"`
+                                            );
                                             setLoading(false);
                                             return;
                                         }
-                                        setMriStatus(mriId, MriStatus.Finished).then(() => {
+                                        if (!equalMri(loadedData.data, form.watch())) {
+                                            console.error(
+                                                "[MriEditorContent] Saved MRI value doesn't correspond with the form values"
+                                            );
+                                            setLoading(false);
+                                            return;
+                                        }
+                                        setMriStatus(updatedMriId, MriStatus.Finished).then(() => {
                                             reloadWindow();
                                         });
                                     });
