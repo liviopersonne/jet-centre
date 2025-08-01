@@ -20,6 +20,7 @@ enum MriStatus {
 /// Information that figure on the MRI
 model Mri {
     id                 String    @id @default(cuid())
+    title              String?
     /// Approximate lower bound of the total `retribution`
     wageLowerBound     Int?
     /// Approximate upper bound of the total `retribution`
