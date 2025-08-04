@@ -41,7 +41,7 @@ model Mri {
     /// Status of the MRI: written? validated? sent? expired?
     status             MriStatus @default(InProgress)
     study              Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
-    studyId            String    @unique
+    studyId            String
     formMRIs           MriForm[]
 }
 

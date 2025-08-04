@@ -15,7 +15,7 @@ export async function loadStudyMris(code: string): Promise<MriServerData[] | und
             include: {
                 study: {
                     include: {
-                        mri: true,
+                        mris: true,
                         cdps: {
                             include: {
                                 user: {
@@ -34,7 +34,7 @@ export async function loadStudyMris(code: string): Promise<MriServerData[] | und
         if (!study) {
             throw new Error('studyInfo exists without study.');
         }
-        const mris = study.mri;
+        const mris = study.mris;
         if (mris.length > 0) {
             return mris.map((mri) => {
                 const data: MriFormType = {
