@@ -22,47 +22,60 @@ import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
 import { loadStudyMris, setMriStatus, storeMriData } from './form/mri';
-import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
+import {
+    DEFAULT_MRI_VALUES,
+    MriFormType,
+    MriServerData,
+    equalMri,
+    mriCreationSchema,
+} from './form/schema';
 import { RenderMRI } from './render';
 
 interface InnerProps {
-    study: string;
-    serverMriData: MriServerData;
+    studyCode: string;
+    loadedMriData: MriServerData[];
 }
 
 // TODO: Initialise with undefined mri id if none is found
 // TODO: Load correct mri in the form inputs
 // TODO: Load empty mri if mriId is undefined
 
-export default function Inner({ study, serverMriData }: InnerProps) {
-    const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
-        resolver: zodResolver(mriCreationSchema),
-        defaultValues: serverMriData.data,
-    });
-
-    const mri = form.watch();
-
+export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
 
     const [collapse, setCollapse] = useState(false);
 
-    const [selectedMriId, setSelectedMriId] = useState(serverMriData.mriId);
+    const [serverMriData, setServerMriData] = useState(loadedMriData);
+
+    const [selectedMriId, setSelectedMriId] = useState(serverMriData[0].mriId);
+
+    const selectedMri = selectedMriId
+        ? serverMriData.find((d) => d.mriId === selectedMriId)!
+        : serverMriData.find((d) => !d.mriId)!;
+    // new mri created => 1 element wih d.mriId = undefined
+
+    const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
+        resolver: zodResolver(mriCreationSchema),
+        defaultValues: selectedMri.data,
+    });
+
+    const mri = form.watch();
 
     const updateServer = () => {
         setStatus(UpdateBoxStatus.Loading);
         const formData = form.watch();
-        storeMriData(selectedMriId, study, formData).then((updatedMriId) => {
+        storeMriData(selectedMriId, studyCode, formData).then((updatedMriId) => {
             if (!updatedMriId) {
                 setStatus(UpdateBoxStatus.Error);
             }
             if (!selectedMriId) {
                 console.log(
-                    `New MRI was successfully created for study ${study}, id=${updatedMriId}`
+                    `New MRI was successfully created for study ${studyCode}, id=${updatedMriId}`
                 );
                 // TODO: Reload the mri selector
                 setSelectedMriId(updatedMriId);
             }
-            loadStudyMris(study).then((data) => {
+            loadStudyMris(studyCode).then((data) => {
                 const loadedData = data?.find((value) => value.mriId === updatedMriId);
                 setStatus(
                     loadedData && equalMri(loadedData?.data, formData)
@@ -90,9 +103,10 @@ export default function Inner({ study, serverMriData }: InnerProps) {
                 <BoxCollapser collapse={collapse}>
                     <BoxContent>
                         <MriSelector
-                            studyCode={study}
+                            studyCode={studyCode}
                             selectedId={selectedMriId}
                             setSelectedId={setSelectedMriId}
+                            setServerMriData={setServerMriData}
                         />
                     </BoxContent>
                 </BoxCollapser>
@@ -102,15 +116,15 @@ export default function Inner({ study, serverMriData }: InnerProps) {
                     status={status}
                     update={updateServer}
                     title="Écriture du MRI"
-                    editable={serverMriData.status === MriStatus.InProgress}
+                    editable={selectedMri.status === MriStatus.InProgress}
                 >
                     <MriEditorContent
                         setNotSaved={setNotSaved}
                         form={form}
                         updateServer={updateServer}
-                        serverMriId={serverMriData.mriId}
-                        status={serverMriData.status}
-                        study={study}
+                        serverMriId={selectedMri.mriId}
+                        status={selectedMri.status}
+                        study={studyCode}
                         mriId={selectedMriId}
                     />
                 </UpdateBox>
@@ -119,7 +133,7 @@ export default function Inner({ study, serverMriData }: InnerProps) {
                         <BoxTitle>Prévisualisation du MRI</BoxTitle>
                     </BoxHeader>
                     <BoxContent height="limited" noPadding>
-                        <RenderMRI mri={mri} study={study} admins={serverMriData.admins || []} />
+                        <RenderMRI mri={mri} study={studyCode} admins={selectedMri.admins || []} />
                     </BoxContent>
                 </Box>
             </div>
@@ -131,9 +145,10 @@ interface MriSelectorProps {
     studyCode: string;
     selectedId: string | undefined;
     setSelectedId: Dispatch<SetStateAction<string | undefined>>;
+    setServerMriData: Dispatch<SetStateAction<MriServerData[]>>;
 }
 
-function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps) {
+function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }: MriSelectorProps) {
     const [loading, setLoading] = useState(true);
     const [mris, setMris] = useState<MriServerData[] | undefined>();
 
@@ -189,7 +204,26 @@ function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps)
                             </ToggleGroupItem>
                         ))}
                     </ToggleGroup>
-                    <BoxButtonPlus onClick={() => {}} bg-black />
+                    <BoxButtonPlus
+                        onClick={() => {
+                            storeMriData(undefined, studyCode, DEFAULT_MRI_VALUES).then(
+                                (newMriId) => {
+                                    loadStudyMris(studyCode).then((newMriData) => {
+                                        if (!newMriData) {
+                                            console.error(
+                                                `Error while adding a new mri to study ${studyCode}`
+                                            );
+                                        } else {
+                                            setServerMriData(newMriData!);
+                                            setSelectedId(newMriId);
+                                        }
+                                    });
+                                }
+                            );
+                        }}
+                        bg-black
+                    />{' '}
+                    {/* TODO: Create new mri */}
                     <p>Selected item {selectedId}</p> {/* TODO: Remove */}
                 </div>
             );

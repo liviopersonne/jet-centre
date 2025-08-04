@@ -36,7 +36,7 @@ export const mriCreationSchema = z.object({
 
 export type MriFormType = z.infer<typeof mriCreationSchema>;
 
-export const DEFAULT_MRI_VALUES = {
+export const DEFAULT_MRI_VALUES: MriFormType = {
     title: 'Mri sans titre',
     wageLowerBound: 0,
     wageUpperBound: 0,
@@ -44,9 +44,9 @@ export const DEFAULT_MRI_VALUES = {
     difficulty: Level.Low,
     mainDomain: Domain.EmbeddedSystems,
     introductionText: 'Nous vous proposons une étude...',
-    requiredSkillsText: 'Nous recherchons un.e intervenant.e ayant des compétences en...',
-    timeLapsText: 'Le client désire commencer le plus tôt possible.',
     descriptionText: 'Le but de cette étude est de...',
+    timeLapsText: 'Le client désire commencer le plus tôt possible.',
+    requiredSkillsText: 'Nous recherchons un.e intervenant.e ayant des compétences en...',
 };
 
 export function equalMri(left: MriFormType, right: MriFormType): boolean {

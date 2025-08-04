@@ -8,7 +8,7 @@ import { dbg } from '@/lib/utils';
 import { adminDisplay, DEFAULT_MRI_VALUES, MriFormType, MriServerData } from './schema';
 
 // TODO: Replace loadMriData by loadStudyMris
-export async function loadStudyMris(code: string): Promise<MriServerData[]> {
+export async function loadStudyMris(code: string): Promise<MriServerData[] | undefined> {
     try {
         const infos = await prisma.studyInfos.findUnique({
             where: { code },
@@ -73,7 +73,7 @@ export async function loadStudyMris(code: string): Promise<MriServerData[]> {
             ];
         }
     } catch (e) {
-        throw new Error(`[loadStudyMris] ${e}`);
+        console.error(`[loadStudyMris] ${e}`);
     }
 }
 
@@ -107,10 +107,25 @@ export async function storeMriData(
             });
             return updatedMri.id;
         } else {
+            const infos = await prisma.studyInfos.findUnique({
+                where: { code: studyCode },
+                include: {
+                    study: true,
+                },
+            });
+            if (!infos) {
+                throw new Error('Failed to fetch mission in database.');
+            }
+            const study = infos.study;
+            if (!study) {
+                throw new Error('studyInfo exists without study.');
+            }
             const newMri = await prisma.mri.create({
                 data: {
-                    studyId: studyCode,
                     ...mriData,
+                    study: {
+                        connect: { id: study.id },
+                    },
                 },
             });
             return newMri.id;

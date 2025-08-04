@@ -4,15 +4,14 @@ import { StudyParams } from '@/routes';
 import Inner from './inner';
 
 export default async function MRI({ params }: StudyParams) {
-    const { study } = await params;
+    const { study: studyCode } = await params;
 
-    const studyMris = await loadStudyMris(study);
+    const studyMris = await loadStudyMris(studyCode);
+    // studyMris is never empty
 
-    const mriData = studyMris[0];
-
-    if (!mriData) {
+    if (!studyMris) {
         throw new Error('Failed to load MRI');
     }
 
-    return <Inner study={study} serverMriData={mriData} />;
+    return <Inner studyCode={studyCode} loadedMriData={studyMris} />;
 }
