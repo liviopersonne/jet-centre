@@ -8,7 +8,7 @@ import { dbg } from '@/lib/utils';
 import { adminDisplay, DEFAULT_MRI_VALUES, MriFormType, MriServerData } from './schema';
 
 // TODO: Replace loadMriData by loadStudyMris
-export async function loadStudyMris(code: string): Promise<MriServerData[] | undefined> {
+export async function loadStudyMris(code: string): Promise<MriServerData[]> {
     try {
         const infos = await prisma.studyInfos.findUnique({
             where: { code },
@@ -35,29 +35,45 @@ export async function loadStudyMris(code: string): Promise<MriServerData[] | und
             throw new Error('studyInfo exists without study.');
         }
         const mris = study.mri;
-        return mris.map((mri) => {
-            const data: MriFormType = {
-                title: mri?.title || infos?.title || DEFAULT_MRI_VALUES.title,
-                wageLowerBound: mri?.wageLowerBound ?? DEFAULT_MRI_VALUES.wageLowerBound,
-                wageUpperBound: mri?.wageUpperBound ?? DEFAULT_MRI_VALUES.wageUpperBound,
-                wageLevel: mri?.wageLevel ?? DEFAULT_MRI_VALUES.wageLevel,
-                difficulty: mri?.difficulty ?? DEFAULT_MRI_VALUES.difficulty,
-                mainDomain: mri?.mainDomain || infos.domains[0] || DEFAULT_MRI_VALUES.mainDomain,
-                introductionText: mri?.introductionText ?? DEFAULT_MRI_VALUES.introductionText,
-                descriptionText: mri?.descriptionText ?? DEFAULT_MRI_VALUES.descriptionText,
-                timeLapsText: mri?.timeLapsText ?? DEFAULT_MRI_VALUES.timeLapsText,
-                requiredSkillsText:
-                    mri?.requiredSkillsText ?? DEFAULT_MRI_VALUES.requiredSkillsText,
-            };
-            return {
-                mriId: mri.id,
-                admins: study.cdps.map(adminDisplay),
-                data,
-                status: mri?.status || MriStatus.InProgress,
-            };
-        });
+        if (mris.length > 0) {
+            return mris.map((mri) => {
+                const data: MriFormType = {
+                    title: mri?.title || infos?.title || DEFAULT_MRI_VALUES.title,
+                    wageLowerBound: mri?.wageLowerBound ?? DEFAULT_MRI_VALUES.wageLowerBound,
+                    wageUpperBound: mri?.wageUpperBound ?? DEFAULT_MRI_VALUES.wageUpperBound,
+                    wageLevel: mri?.wageLevel ?? DEFAULT_MRI_VALUES.wageLevel,
+                    difficulty: mri?.difficulty ?? DEFAULT_MRI_VALUES.difficulty,
+                    mainDomain:
+                        mri?.mainDomain || infos.domains[0] || DEFAULT_MRI_VALUES.mainDomain,
+                    introductionText: mri?.introductionText ?? DEFAULT_MRI_VALUES.introductionText,
+                    descriptionText: mri?.descriptionText ?? DEFAULT_MRI_VALUES.descriptionText,
+                    timeLapsText: mri?.timeLapsText ?? DEFAULT_MRI_VALUES.timeLapsText,
+                    requiredSkillsText:
+                        mri?.requiredSkillsText ?? DEFAULT_MRI_VALUES.requiredSkillsText,
+                };
+                return {
+                    mriId: mri.id,
+                    admins: study.cdps.map(adminDisplay),
+                    data,
+                    status: mri?.status || MriStatus.InProgress,
+                };
+            });
+        } else {
+            return [
+                {
+                    mriId: undefined,
+                    admins: study.cdps.map(adminDisplay),
+                    status: MriStatus.InProgress,
+                    data: {
+                        ...DEFAULT_MRI_VALUES,
+                        title: infos?.title || DEFAULT_MRI_VALUES.title,
+                        mainDomain: infos.domains[0] || DEFAULT_MRI_VALUES.mainDomain,
+                    },
+                },
+            ];
+        }
     } catch (e) {
-        console.error(`[loadStudyMris] ${e}`);
+        throw new Error(`[loadStudyMris] ${e}`);
     }
 }
 

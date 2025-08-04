@@ -46,7 +46,7 @@ export default function Inner({ study, serverMriData }: InnerProps) {
 
     const [collapse, setCollapse] = useState(false);
 
-    const [selectedMriId, setSelectedMriId] = useState<string>();
+    const [selectedMriId, setSelectedMriId] = useState(serverMriData.mriId);
 
     const updateServer = () => {
         setStatus(UpdateBoxStatus.Loading);
@@ -181,7 +181,7 @@ function MriSelector({ studyCode, selectedId, setSelectedId }: MriSelectorProps)
                     >
                         {mris.map((mri, i) => (
                             <ToggleGroupItem
-                                value={mri.mriId}
+                                value={mri.mriId ?? 'new_mri'}
                                 key={i}
                                 color={getStatusColor(mri.status)}
                             >
