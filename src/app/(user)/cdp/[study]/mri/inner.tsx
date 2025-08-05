@@ -30,9 +30,11 @@ interface InnerProps {
     loadedMriData: MriServerData[];
 }
 
-// TODO: Initialise with undefined mri id if none is found
-// TODO: Load correct mri in the form inputs
-// TODO: Load empty mri if mriId is undefined
+// TODO: Check if no mris are found
+// TODO: Make the most updated mris go to the start of the mri list
+// TODO: Auto collapse or expand box according to situations
+// TODO: Bottom box bar
+// TODO: Delete MRI
 
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
@@ -42,13 +44,11 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [serverMriData, setServerMriData] = useState(loadedMriData);
 
     if (!serverMriData) {
-        // TODO: Load while the MRI is being created
         createNewMri(studyCode).then((newMriData) => {
             if (newMriData) {
                 console.log(
                     `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
                 );
-                // TODO: Reload the mri selector
                 setServerMriData([newMriData]);
             } else {
                 throw Error('Error while creating a new mri');
@@ -190,6 +190,7 @@ function MriSelector({
         });
     }, [studyCode, serverMriData]);
 
+    // TODO: Add a small icon to represent each step in mri statuses
     const getStatusColor = (status: MriStatus) => {
         switch (status) {
             case 'InProgress':
@@ -242,6 +243,7 @@ function MriSelector({
                                     console.log(
                                         `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
                                     );
+                                    // TODO: Make sure the new mri appears in the selector
                                     setServerMriData([newMriData, ...serverMriData]);
                                     setSelectedId(newMriData.mriId);
                                 } else {
