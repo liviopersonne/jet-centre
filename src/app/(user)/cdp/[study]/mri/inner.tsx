@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MriStatus } from '@prisma/client';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 
 import {
@@ -21,14 +21,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
-import { loadStudyMris, setMriStatus, storeMriData } from './form/mri';
-import {
-    DEFAULT_MRI_VALUES,
-    MriFormType,
-    MriServerData,
-    equalMri,
-    mriCreationSchema,
-} from './form/schema';
+import { createNewMri, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
+import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
 import { RenderMRI } from './render';
 
 interface InnerProps {
@@ -47,17 +41,47 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
 
     const [serverMriData, setServerMriData] = useState(loadedMriData);
 
+    if (!serverMriData) {
+        // TODO: Load while the MRI is being created
+        createNewMri(studyCode).then((newMriData) => {
+            if (newMriData) {
+                console.log(
+                    `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
+                );
+                // TODO: Reload the mri selector
+                setServerMriData([newMriData]);
+            } else {
+                throw Error('Error while creating a new mri');
+            }
+        });
+    }
+
     const [selectedMriId, setSelectedMriId] = useState(serverMriData[0].mriId);
 
-    const selectedMri = selectedMriId
-        ? serverMriData.find((d) => d.mriId === selectedMriId)!
-        : serverMriData.find((d) => !d.mriId)!;
-    // new mri created => 1 element wih d.mriId = undefined
+    const selectedMri = useMemo(() => {
+        return serverMriData.find((d) => d.mriId === selectedMriId);
+    }, [serverMriData, selectedMriId]);
+
+    if (!selectedMri) {
+        throw Error(`Couldn't find Mri of id ${selectedMriId} in ${serverMriData}`);
+    }
+
+    // TODO: Remove logs
+    console.log(`LoadedMriData: ${loadedMriData.map((o) => o.mriId)}`);
+    console.log(`selectedMriId: ${selectedMriId}`);
+    console.log(`selectedMri: ${selectedMri.mriId}`);
 
     const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
         resolver: zodResolver(mriCreationSchema),
         defaultValues: selectedMri.data,
     });
+
+    // this changes the form values when a new mri is selected
+    useEffect(() => {
+        if (selectedMri) {
+            form.reset(selectedMri.data);
+        }
+    }, [selectedMri, form]);
 
     const mri = form.watch();
 
@@ -67,13 +91,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
         storeMriData(selectedMriId, studyCode, formData).then((updatedMriId) => {
             if (!updatedMriId) {
                 setStatus(UpdateBoxStatus.Error);
-            }
-            if (!selectedMriId) {
-                console.log(
-                    `New MRI was successfully created for study ${studyCode}, id=${updatedMriId}`
-                );
-                // TODO: Reload the mri selector
-                setSelectedMriId(updatedMriId);
             }
             loadStudyMris(studyCode).then((data) => {
                 const loadedData = data?.find((value) => value.mriId === updatedMriId);
@@ -106,6 +123,7 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                             studyCode={studyCode}
                             selectedId={selectedMriId}
                             setSelectedId={setSelectedMriId}
+                            serverMriData={serverMriData}
                             setServerMriData={setServerMriData}
                         />
                     </BoxContent>
@@ -122,7 +140,7 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                         setNotSaved={setNotSaved}
                         form={form}
                         updateServer={updateServer}
-                        serverMriId={selectedMri.mriId}
+                        serverMriId={selectedMriId}
                         status={selectedMri.status}
                         study={studyCode}
                         mriId={selectedMriId}
@@ -145,10 +163,17 @@ interface MriSelectorProps {
     studyCode: string;
     selectedId: string | undefined;
     setSelectedId: Dispatch<SetStateAction<string | undefined>>;
+    serverMriData: Dispatch<MriServerData[]>;
     setServerMriData: Dispatch<SetStateAction<MriServerData[]>>;
 }
 
-function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }: MriSelectorProps) {
+function MriSelector({
+    studyCode,
+    selectedId,
+    setSelectedId,
+    serverMriData,
+    setServerMriData,
+}: MriSelectorProps) {
     const [loading, setLoading] = useState(true);
     const [mris, setMris] = useState<MriServerData[] | undefined>();
 
@@ -157,7 +182,7 @@ function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }:
             setMris(data);
             setLoading(false);
         });
-    }, [studyCode]);
+    }, [studyCode, serverMriData]);
 
     const getStatusColor = (status: MriStatus) => {
         switch (status) {
@@ -182,7 +207,6 @@ function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }:
         if (mris === undefined) {
             return <p>Error loading mris !</p>;
         } else {
-            // TODO: Set selectedId to the first available mri, and create it if it doesn't exist
             return (
                 <div className="flex flex-col w-full items-center">
                     <ToggleGroup
@@ -191,7 +215,9 @@ function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }:
                         value="selectedId"
                         onValueChange={(newValue) => {
                             // TODO: Load correct MRI
-                            if (newValue) setSelectedId(newValue);
+                            if (newValue) {
+                                setSelectedId(newValue);
+                            }
                         }}
                     >
                         {mris.map((mri, i) => (
@@ -206,20 +232,18 @@ function MriSelector({ studyCode, selectedId, setSelectedId, setServerMriData }:
                     </ToggleGroup>
                     <BoxButtonPlus
                         onClick={() => {
-                            storeMriData(undefined, studyCode, DEFAULT_MRI_VALUES).then(
-                                (newMriId) => {
-                                    loadStudyMris(studyCode).then((newMriData) => {
-                                        if (!newMriData) {
-                                            console.error(
-                                                `Error while adding a new mri to study ${studyCode}`
-                                            );
-                                        } else {
-                                            setServerMriData(newMriData!);
-                                            setSelectedId(newMriId);
-                                        }
-                                    });
+                            createNewMri(studyCode).then((newMriData) => {
+                                if (newMriData) {
+                                    console.log(
+                                        `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
+                                    );
+                                    // TODO: Reload the mri selector
+                                    setServerMriData([...serverMriData, newMriData]);
+                                    setSelectedId(newMriData.mriId);
+                                } else {
+                                    throw Error('Error while creating a new mri');
                                 }
-                            );
+                            });
                         }}
                         bg-black
                     />{' '}

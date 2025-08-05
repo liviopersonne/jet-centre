@@ -76,7 +76,7 @@
         "postcss": "^8.5.3",
         "postcss-load-config": "^6.0.1",
         "prettier": "^3.5.3",
-        "prisma": "6.12.0",
+        "prisma": "^6.13.0",
         "prisma-docs-generator": "git+https://github.com/t-webber/prisma-docs-generator",
         "tailwindcss": "^3.4.17",
         "typescript": "^5.8.2"
