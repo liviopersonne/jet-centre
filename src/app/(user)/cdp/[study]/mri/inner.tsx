@@ -214,7 +214,6 @@ function MriSelector({
                         unselectable="off"
                         value="selectedId"
                         onValueChange={(newValue) => {
-                            // TODO: Load correct MRI
                             if (newValue) {
                                 setSelectedId(newValue);
                             }
@@ -237,8 +236,7 @@ function MriSelector({
                                     console.log(
                                         `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
                                     );
-                                    // TODO: Reload the mri selector
-                                    setServerMriData([...serverMriData, newMriData]);
+                                    setServerMriData([newMriData, ...serverMriData]);
                                     setSelectedId(newMriData.mriId);
                                 } else {
                                     throw Error('Error while creating a new mri');
