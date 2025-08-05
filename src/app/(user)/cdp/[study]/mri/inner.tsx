@@ -86,19 +86,26 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const mri = form.watch();
 
     const updateServer = () => {
+        console.log('UPDATING SERVER');
         setStatus(UpdateBoxStatus.Loading);
         const formData = form.watch();
-        storeMriData(selectedMriId, studyCode, formData).then((updatedMriId) => {
-            if (!updatedMriId) {
+        storeMriData(selectedMriId, formData).then((updatedMriId) => {
+            if (selectedMriId !== updatedMriId) {
+                console.error(
+                    `[updateServer]: Updated mri id "${updatedMriId}" doesn't correspond to selected mri id "${selectedMriId}`
+                );
                 setStatus(UpdateBoxStatus.Error);
             }
             loadStudyMris(studyCode).then((data) => {
-                const loadedData = data?.find((value) => value.mriId === updatedMriId);
-                setStatus(
-                    loadedData && equalMri(loadedData?.data, formData)
-                        ? UpdateBoxStatus.Ok
-                        : UpdateBoxStatus.NotSynced
-                );
+                if (data) {
+                    const loadedData = data.find((value) => value.mriId === updatedMriId);
+                    setStatus(
+                        loadedData && equalMri(loadedData?.data, formData)
+                            ? UpdateBoxStatus.Ok
+                            : UpdateBoxStatus.NotSynced
+                    );
+                    setServerMriData(data);
+                }
             });
         });
     };
@@ -143,7 +150,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                         serverMriId={selectedMriId}
                         status={selectedMri.status}
                         study={studyCode}
-                        mriId={selectedMriId}
                     />
                 </UpdateBox>
                 <Box className="w-full">
@@ -162,8 +168,8 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
 interface MriSelectorProps {
     studyCode: string;
     selectedId: string | undefined;
-    setSelectedId: Dispatch<SetStateAction<string | undefined>>;
-    serverMriData: Dispatch<MriServerData[]>;
+    setSelectedId: Dispatch<SetStateAction<string>>;
+    serverMriData: MriServerData[];
     setServerMriData: Dispatch<SetStateAction<MriServerData[]>>;
 }
 
@@ -245,7 +251,6 @@ function MriSelector({
                         }}
                         bg-black
                     />{' '}
-                    {/* TODO: Create new mri */}
                     <p>Selected item {selectedId}</p> {/* TODO: Remove */}
                 </div>
             );
@@ -255,12 +260,11 @@ function MriSelector({
 
 interface MriEditorContentProps {
     form: UseFormReturn<MriFormType>;
-    serverMriId?: string;
+    serverMriId: string;
     updateServer: () => void;
     status: MriStatus;
     study: string;
     setNotSaved: () => void;
-    mriId: string | undefined;
 }
 
 function MriEditorContent({
@@ -270,7 +274,6 @@ function MriEditorContent({
     serverMriId,
     status,
     study,
-    mriId,
 }: MriEditorContentProps) {
     const [loading, setLoading] = useState(false);
 
@@ -323,7 +326,7 @@ function MriEditorContent({
                         <Button
                             onClick={() => {
                                 setLoading(true);
-                                storeMriData(mriId, study, form.watch()).then((updatedMriId) => {
+                                storeMriData(serverMriId, form.watch()).then((updatedMriId) => {
                                     if (!updatedMriId) {
                                         setLoading(false);
                                         return;

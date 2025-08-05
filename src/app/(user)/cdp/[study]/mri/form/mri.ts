@@ -7,7 +7,6 @@ import { dbg } from '@/lib/utils';
 
 import { adminDisplay, DEFAULT_MRI_VALUES, MriFormType, MriServerData } from './schema';
 
-// TODO: Replace loadMriData by loadStudyMris
 export async function loadStudyMris(code: string): Promise<MriServerData[] | undefined> {
     try {
         const infos = await prisma.studyInfos.findUnique({
@@ -112,7 +111,6 @@ export async function createNewMri(studyCode: string): Promise<MriServerData | u
     }
 }
 
-// TODO: Adapt
 export async function storeMriData(mriId: string, data: MriFormType): Promise<string | undefined> {
     try {
         const mriData = {

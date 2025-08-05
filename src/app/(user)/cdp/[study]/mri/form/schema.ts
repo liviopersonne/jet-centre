@@ -51,6 +51,7 @@ export const DEFAULT_MRI_VALUES: MriFormType = {
 
 export function equalMri(left: MriFormType, right: MriFormType): boolean {
     return (
+        left.title == right.title &&
         left.wageLowerBound == right.wageLowerBound &&
         left.wageUpperBound == right.wageUpperBound &&
         left.wageLevel == right.wageLevel &&
