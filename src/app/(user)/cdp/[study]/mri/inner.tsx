@@ -23,7 +23,13 @@ import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
 import { createNewMri, deleteMri, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
-import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
+import {
+    DEFAULT_MRI_VALUES,
+    MriFormType,
+    MriServerData,
+    equalMri,
+    mriCreationSchema,
+} from './form/schema';
 import { RenderMRI } from './render';
 import {
     AlertDialog,
@@ -32,6 +38,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/router';
 
 interface InnerProps {
     studyCode: string;
@@ -39,7 +46,6 @@ interface InnerProps {
 }
 
 // TODO: Auto collapse or expand box according to situations
-// TODO: What happens it you delete the last MRI
 // FIXME: Validation MRI
 // FIXME: MRI stack vertically when no more space
 
@@ -50,24 +56,25 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
 
     const [serverMriData, setServerMriData] = useState(loadedMriData);
 
-    const [selectedMriId, setSelectedMriId] = useState(serverMriData[0].mriId);
+    const [selectedMriId, setSelectedMriId] = useState<string | undefined>(serverMriData[0]?.mriId);
 
-    const selectedMri = useMemo(() => {
+    const selectedMri: MriServerData | undefined = useMemo(() => {
         return serverMriData.find((d) => d.mriId === selectedMriId);
     }, [serverMriData, selectedMriId]);
 
-    if (!selectedMri) {
+    if (selectedMriId && !selectedMri) {
         throw Error(`Couldn't find Mri of id ${selectedMriId} in ${serverMriData}`);
     }
 
     // TODO: Remove logs
     console.log(`LoadedMriData: ${loadedMriData.map((o) => o.mriId)}`);
+    console.log(`ServerMriData: ${serverMriData.map((o) => o.mriId)}`);
     console.log(`selectedMriId: ${selectedMriId}`);
-    console.log(`selectedMri: ${selectedMri.mriId}`);
+    console.log(`selectedMri: ${selectedMri?.mriId}`);
 
     const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
         resolver: zodResolver(mriCreationSchema),
-        defaultValues: selectedMri.data,
+        defaultValues: selectedMri?.data ?? DEFAULT_MRI_VALUES,
     });
 
     // this changes the form values when a new mri is selected
@@ -77,38 +84,60 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
         }
     }, [selectedMri, form]);
 
+    // this creates an mri if there are no existing mris
+    useEffect(() => {
+        if (serverMriData.length === 0) {
+            createNewMri(studyCode).then((newMriData) => {
+                if (newMriData) {
+                    console.log(
+                        `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
+                    );
+                    setServerMriData([newMriData]);
+                    setSelectedMriId(newMriData.mriId);
+                } else {
+                    throw Error('Error while creating a new mri');
+                }
+            });
+        }
+    }, [serverMriData]);
+
     const mri = form.watch();
 
     const updateServer = () => {
         console.log('UPDATING SERVER');
         setStatus(UpdateBoxStatus.Loading);
         const formData = form.watch();
-        storeMriData(selectedMriId, formData).then((updatedMriId) => {
-            if (selectedMriId !== updatedMriId) {
-                console.error(
-                    `[updateServer]: Updated mri id "${updatedMriId}" doesn't correspond to selected mri id "${selectedMriId}`
-                );
-                setStatus(UpdateBoxStatus.Error);
-            }
-            loadStudyMris(studyCode).then((data) => {
-                if (data) {
-                    const loadedData = data.find((value) => value.mriId === updatedMriId);
-                    setStatus(
-                        loadedData && equalMri(loadedData?.data, formData)
-                            ? UpdateBoxStatus.Ok
-                            : UpdateBoxStatus.NotSynced
+        if (!selectedMriId) {
+            console.error('[updateServer]: Selected MRI id is undefined');
+            setStatus(UpdateBoxStatus.Error);
+        } else {
+            storeMriData(selectedMriId, formData).then((updatedMriId) => {
+                if (selectedMriId !== updatedMriId) {
+                    console.error(
+                        `[updateServer]: Updated mri id "${updatedMriId}" doesn't correspond to selected mri id "${selectedMriId}`
                     );
-                    setServerMriData(data);
+                    setStatus(UpdateBoxStatus.Error);
                 }
+                loadStudyMris(studyCode).then((data) => {
+                    if (data) {
+                        const loadedData = data.find((value) => value.mriId === updatedMriId);
+                        setStatus(
+                            loadedData && equalMri(loadedData?.data, formData)
+                                ? UpdateBoxStatus.Ok
+                                : UpdateBoxStatus.NotSynced
+                        );
+                        setServerMriData(data);
+                    }
+                });
             });
-        });
+        }
     };
 
     const setNotSaved = () => {
         setStatus(UpdateBoxStatus.UserPending);
     };
 
-    return (
+    return selectedMriId && selectedMri ? (
         <div className="flex flex-col space-y-main w-full">
             <Box className="w-full">
                 <BoxHeader>
@@ -156,13 +185,15 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                 </Box>
             </div>
         </div>
+    ) : (
+        <LoadingFullStops />
     );
 }
 
 interface MriSelectorProps {
     studyCode: string;
     selectedId: string | undefined;
-    setSelectedId: Dispatch<SetStateAction<string>>;
+    setSelectedId: Dispatch<SetStateAction<string | undefined>>;
     serverMriData: MriServerData[];
     setServerMriData: Dispatch<SetStateAction<MriServerData[]>>;
 }

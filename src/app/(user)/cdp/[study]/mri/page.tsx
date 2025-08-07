@@ -11,18 +11,6 @@ export default async function MRI({ params }: StudyParams) {
     if (!studyMris) {
         throw new Error('Failed to load MRI');
     }
-    if (studyMris.length === 0) {
-        createNewMri(studyCode).then((newMriData) => {
-            if (newMriData) {
-                console.log(
-                    `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
-                );
-                studyMris.push(newMriData);
-            } else {
-                throw Error('Error while creating a new mri');
-            }
-        });
-    }
 
     return <Inner studyCode={studyCode} loadedMriData={studyMris} />;
 }
