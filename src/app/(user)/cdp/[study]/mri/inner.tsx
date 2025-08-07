@@ -31,11 +31,11 @@ interface InnerProps {
     loadedMriData: MriServerData[];
 }
 
-// TODO: Make the most updated mris go to the start of the mri list (reverse what is done now)
 // TODO: Auto collapse or expand box according to situations
 // TODO: Delete MRI
 // TODO: What happens it you delete the last MRI
 // FIXME: Validation MRI
+// FIXME: MRI stack vertically when no more space
 
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
@@ -173,7 +173,7 @@ function MriSelector({
 
     useEffect(() => {
         loadStudyMris(studyCode).then((data) => {
-            setMris(data);
+            setMris(data?.reverse()); // reversing to put more recent mris first
             setLoading(false);
         });
     }, [studyCode, serverMriData]);
