@@ -3,6 +3,7 @@ import { Mri } from '@prisma/client';
 import { adminDisplay, MriFormType } from '@/app/(user)/cdp/[study]/mri/form/schema';
 import { RenderMRI } from '@/app/(user)/cdp/[study]/mri/render';
 import { Box, BoxContent, BoxHeader, BoxTitle } from '@/components/boxes/boxes';
+
 import { fetchMriById } from '../actions';
 
 function assertAllFieldsFull(mri: Mri | undefined): MriFormType | undefined | null {

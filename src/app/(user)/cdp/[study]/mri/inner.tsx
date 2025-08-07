@@ -17,6 +17,13 @@ import {
 } from '@/components/boxes/boxes';
 import { UpdateBox, UpdateBoxStatus } from '@/components/boxes/update-box';
 import { LoadingFullStops } from '@/components/loading';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { reloadWindow } from '@/lib/utils';
@@ -31,13 +38,6 @@ import {
     mriCreationSchema,
 } from './form/schema';
 import { RenderMRI } from './render';
-import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface InnerProps {
     studyCode: string;
@@ -60,12 +60,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     if (selectedMriId && !selectedMri) {
         throw Error(`Couldn't find Mri of id ${selectedMriId} in ${serverMriData}`);
     }
-
-    // TODO: Remove logs
-    console.log(`LoadedMriData: ${loadedMriData.map((o) => o.mriId)}`);
-    console.log(`ServerMriData: ${serverMriData.map((o) => o.mriId)}`);
-    console.log(`selectedMriId: ${selectedMriId}`);
-    console.log(`selectedMri: ${selectedMri?.mriId}`);
 
     const form: UseFormReturn<MriFormType> = useForm<MriFormType>({
         resolver: zodResolver(mriCreationSchema),
@@ -94,7 +88,7 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                 }
             });
         }
-    }, [serverMriData]);
+    }, [studyCode, serverMriData]);
 
     const mri = form.watch();
 
@@ -146,7 +140,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                     <BoxContent>
                         <MriSelector
                             studyCode={studyCode}
-                            selectedId={selectedMriId}
                             setSelectedId={setSelectedMriId}
                             serverMriData={serverMriData}
                             setServerMriData={setServerMriData}
@@ -187,7 +180,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
 
 interface MriSelectorProps {
     studyCode: string;
-    selectedId: string | undefined;
     setSelectedId: Dispatch<SetStateAction<string | undefined>>;
     serverMriData: MriServerData[];
     setServerMriData: Dispatch<SetStateAction<MriServerData[]>>;
@@ -195,7 +187,6 @@ interface MriSelectorProps {
 
 function MriSelector({
     studyCode,
-    selectedId,
     setSelectedId,
     serverMriData,
     setServerMriData,
@@ -275,7 +266,6 @@ function MriSelector({
                         }}
                         bg-black
                     />{' '}
-                    <p>Selected item {selectedId}</p> {/* TODO: Remove */}
                 </div>
             );
         }

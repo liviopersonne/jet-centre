@@ -1,4 +1,4 @@
-import { createNewMri, loadStudyMris } from '@/app/(user)/cdp/[study]/mri/form/mri';
+import { loadStudyMris } from '@/app/(user)/cdp/[study]/mri/form/mri';
 import { StudyParams } from '@/routes';
 
 import Inner from './inner';

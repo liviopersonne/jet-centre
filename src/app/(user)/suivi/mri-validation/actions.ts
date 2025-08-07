@@ -1,6 +1,6 @@
 'use server';
 
-import { Mri, MriStatus } from '@prisma/client';
+import { MriStatus } from '@prisma/client';
 
 import prisma from '@/db';
 
