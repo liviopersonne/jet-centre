@@ -44,8 +44,6 @@ interface InnerProps {
     loadedMriData: MriServerData[];
 }
 
-// FIXME: Validation MRI
-
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
 
