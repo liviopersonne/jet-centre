@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { MriStatus } from '@prisma/client';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
+import { FaCheck, FaCheckCircle, FaClock, FaPaperPlane, FaPen, FaQuestion } from 'react-icons/fa';
 
 import {
     Box,
@@ -34,6 +35,7 @@ interface InnerProps {
 // TODO: Auto collapse or expand box according to situations
 // TODO: Delete MRI
 // TODO: What happens it you delete the last MRI
+// FIXME: Validation MRI
 
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
@@ -176,22 +178,20 @@ function MriSelector({
         });
     }, [studyCode, serverMriData]);
 
-    // TODO: Add a small icon to represent each step in mri statuses
-    // FIXME: Text color
-    const getStatusColor = (status: MriStatus) => {
+    const getStatusAssets = (status: MriStatus) => {
         switch (status) {
             case 'InProgress':
-                return 'yellow';
+                return { color: 'text-yellow-300', logo: <FaPen /> };
             case 'Finished':
-                return 'green';
+                return { color: 'text-green-300', logo: <FaCheck /> };
             case 'Validated':
-                return 'darkgreen';
+                return { color: 'text-darkgreen-300', logo: <FaCheckCircle /> };
             case 'Sent':
-                return 'blue';
+                return { color: 'text-blue-300', logo: <FaPaperPlane /> };
             case 'Expired':
-                return 'purple';
+                return { color: 'text-purple-300', logo: <FaClock /> };
             default:
-                return 'white';
+                return { color: 'text-white-300', logo: <FaQuestion /> };
         }
     };
 
@@ -217,9 +217,10 @@ function MriSelector({
                             <ToggleGroupItem
                                 value={mri.mriId ?? 'new_mri'}
                                 key={i}
-                                color={getStatusColor(mri.status)}
+                                className={getStatusAssets(mri.status).color}
                             >
-                                {mri.data.title ?? 'Untitled MRI'}
+                                <p>{mri.data.title ?? 'Untitled MRI'}</p>
+                                {getStatusAssets(mri.status).logo}
                             </ToggleGroupItem>
                         ))}
                     </ToggleGroup>
@@ -230,7 +231,6 @@ function MriSelector({
                                     console.log(
                                         `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
                                     );
-                                    // TODO: Make sure the new mri appears in the selector
                                     setServerMriData([newMriData, ...serverMriData]);
                                     setSelectedId(newMriData.mriId);
                                 } else {
