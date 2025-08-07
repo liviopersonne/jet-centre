@@ -30,11 +30,10 @@ interface InnerProps {
     loadedMriData: MriServerData[];
 }
 
-// TODO: Check if no mris are found
-// TODO: Make the most updated mris go to the start of the mri list
+// TODO: Make the most updated mris go to the start of the mri list (reverse what is done now)
 // TODO: Auto collapse or expand box according to situations
-// TODO: Bottom box bar
 // TODO: Delete MRI
+// TODO: What happens it you delete the last MRI
 
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
@@ -42,19 +41,6 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [collapse, setCollapse] = useState(false);
 
     const [serverMriData, setServerMriData] = useState(loadedMriData);
-
-    if (!serverMriData) {
-        createNewMri(studyCode).then((newMriData) => {
-            if (newMriData) {
-                console.log(
-                    `New MRI was successfully created for study ${studyCode}, id=${newMriData}`
-                );
-                setServerMriData([newMriData]);
-            } else {
-                throw Error('Error while creating a new mri');
-            }
-        });
-    }
 
     const [selectedMriId, setSelectedMriId] = useState(serverMriData[0].mriId);
 
@@ -191,6 +177,7 @@ function MriSelector({
     }, [studyCode, serverMriData]);
 
     // TODO: Add a small icon to represent each step in mri statuses
+    // FIXME: Text color
     const getStatusColor = (status: MriStatus) => {
         switch (status) {
             case 'InProgress':
