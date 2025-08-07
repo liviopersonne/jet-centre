@@ -149,3 +149,15 @@ export async function setMriStatus(mriId: string, status: MriStatus) {
         console.error(`[validateMri] ${e}`);
     }
 }
+
+export async function deleteMri(mriId: string): Promise<boolean> {
+    try {
+        await prisma.mri.delete({
+            where: { id: mriId },
+        });
+        return true;
+    } catch (e) {
+        console.error(`[deleteMri] ${e}`);
+        return false;
+    }
+}

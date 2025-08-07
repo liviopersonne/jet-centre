@@ -22,9 +22,16 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { reloadWindow } from '@/lib/utils';
 
 import MRICreationForm from './form/form';
-import { createNewMri, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
+import { createNewMri, deleteMri, loadStudyMris, setMriStatus, storeMriData } from './form/mri';
 import { MriFormType, MriServerData, equalMri, mriCreationSchema } from './form/schema';
 import { RenderMRI } from './render';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface InnerProps {
     studyCode: string;
@@ -32,7 +39,6 @@ interface InnerProps {
 }
 
 // TODO: Auto collapse or expand box according to situations
-// TODO: Delete MRI
 // TODO: What happens it you delete the last MRI
 // FIXME: Validation MRI
 // FIXME: MRI stack vertically when no more space
@@ -189,7 +195,7 @@ function MriSelector({
             case 'Sent':
                 return { color: 'text-blue-300', logo: <FaPaperPlane /> };
             case 'Expired':
-                return { color: 'text-purple-300', logo: <FaClock /> };
+                return { color: 'text-red-300', logo: <FaClock /> };
             default:
                 return { color: 'text-white-300', logo: <FaQuestion /> };
         }
@@ -265,6 +271,7 @@ function MriEditorContent({
     study,
 }: MriEditorContentProps) {
     const [loading, setLoading] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     switch (status) {
         case MriStatus.Sent:
@@ -312,47 +319,116 @@ function MriEditorContent({
                     {loading ? (
                         <LoadingFullStops />
                     ) : (
-                        <Button
-                            onClick={() => {
-                                setLoading(true);
-                                storeMriData(serverMriId, form.watch()).then((updatedMriId) => {
-                                    if (!updatedMriId) {
-                                        setLoading(false);
-                                        return;
-                                    }
-                                    loadStudyMris(study).then((data) => {
-                                        if (!data) {
+                        <div className="flex flex-row space-x-main">
+                            <Button
+                                className="font-semibold"
+                                onClick={() => {
+                                    setLoading(true);
+                                    storeMriData(serverMriId, form.watch()).then((updatedMriId) => {
+                                        if (!updatedMriId) {
                                             setLoading(false);
                                             return;
                                         }
-                                        const loadedData = data.find(
-                                            (value) => value.mriId === updatedMriId
-                                        );
-                                        if (loadedData === undefined) {
-                                            console.error(
-                                                `[MriEditorContent] Couldn't find an MRI with the correct id "${updatedMriId}"`
+                                        loadStudyMris(study).then((data) => {
+                                            if (!data) {
+                                                setLoading(false);
+                                                return;
+                                            }
+                                            const loadedData = data.find(
+                                                (value) => value.mriId === updatedMriId
                                             );
-                                            setLoading(false);
-                                            return;
-                                        }
-                                        if (!equalMri(loadedData.data, form.watch())) {
-                                            console.error(
-                                                "[MriEditorContent] Saved MRI value doesn't correspond with the form values"
+                                            if (loadedData === undefined) {
+                                                console.error(
+                                                    `[MriEditorContent] Couldn't find an MRI with the correct id "${updatedMriId}"`
+                                                );
+                                                setLoading(false);
+                                                return;
+                                            }
+                                            if (!equalMri(loadedData.data, form.watch())) {
+                                                console.error(
+                                                    "[MriEditorContent] Saved MRI value doesn't correspond with the form values"
+                                                );
+                                                setLoading(false);
+                                                return;
+                                            }
+                                            setMriStatus(updatedMriId, MriStatus.Finished).then(
+                                                () => {
+                                                    reloadWindow(); // TODO: Check if I can remove this
+                                                }
                                             );
-                                            setLoading(false);
-                                            return;
-                                        }
-                                        setMriStatus(updatedMriId, MriStatus.Finished).then(() => {
-                                            reloadWindow();
                                         });
                                     });
-                                });
-                            }}
-                        >
-                            Valider le MRI
-                        </Button>
+                                }}
+                            >
+                                Valider le MRI
+                            </Button>
+                            <Button
+                                variant={'destructive'}
+                                className="font-semibold"
+                                onClick={() => {
+                                    setIsDeleteOpen(true);
+                                }}
+                            >
+                                Supprimer le MRI
+                            </Button>
+                            <DeleteMriDialog
+                                isOpen={isDeleteOpen}
+                                setIsOpen={setIsDeleteOpen}
+                                mriId={serverMriId}
+                            />
+                        </div>
                     )}
                 </div>
             );
     }
+}
+
+interface DeleteMriDialogProps {
+    isOpen: boolean;
+    setIsOpen: Dispatch<SetStateAction<boolean>>;
+    mriId: string;
+}
+
+function DeleteMriDialog({ isOpen, setIsOpen, mriId }: DeleteMriDialogProps) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    return (
+        <AlertDialog open={isOpen} onOpenChange={() => setIsOpen((isOpen) => !isOpen)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmer la suppression du MRI</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Ce MRI sera définitivement supprimé. Cette action est irréversible.
+                    </AlertDialogDescription>
+                    {isLoading ? (
+                        <div className="w-full items-center flex justify-center">
+                            <LoadingFullStops />
+                        </div>
+                    ) : (
+                        <div className="w-full items-center flex justify-between pt-4">
+                            <Button
+                                variant="outline"
+                                className="font-semibold"
+                                onClick={() => {
+                                    setIsOpen(false);
+                                }}
+                            >
+                                Annuler la suppression
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="font-semibold"
+                                onClick={() => {
+                                    setIsLoading(true);
+                                    deleteMri(mriId).then(() => reloadWindow());
+                                }}
+                            >
+                                Confirmer la suppression
+                            </Button>
+                        </div>
+                    )}
+                </AlertDialogHeader>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
 }
