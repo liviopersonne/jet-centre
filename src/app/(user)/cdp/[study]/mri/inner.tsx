@@ -38,21 +38,18 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useRouter } from 'next/router';
 
 interface InnerProps {
     studyCode: string;
     loadedMriData: MriServerData[];
 }
 
-// TODO: Auto collapse or expand box according to situations
 // FIXME: Validation MRI
-// FIXME: MRI stack vertically when no more space
 
 export default function Inner({ studyCode, loadedMriData }: InnerProps) {
     const [status, setStatus] = useState(UpdateBoxStatus.Ok);
 
-    const [collapse, setCollapse] = useState(false);
+    const [collapseMriSelector, setCollapseMriSelector] = useState(false);
 
     const [serverMriData, setServerMriData] = useState(loadedMriData);
 
@@ -143,11 +140,11 @@ export default function Inner({ studyCode, loadedMriData }: InnerProps) {
                 <BoxHeader>
                     <BoxTitle>Choix du MRI</BoxTitle>
                     <BoxCollapseButton
-                        collapse={collapse}
-                        setCollapse={setCollapse}
+                        collapse={collapseMriSelector}
+                        setCollapse={setCollapseMriSelector}
                     ></BoxCollapseButton>
                 </BoxHeader>
-                <BoxCollapser collapse={collapse}>
+                <BoxCollapser collapse={collapseMriSelector}>
                     <BoxContent>
                         <MriSelector
                             studyCode={studyCode}
@@ -210,7 +207,7 @@ function MriSelector({
 
     useEffect(() => {
         loadStudyMris(studyCode).then((data) => {
-            setMris(data?.reverse()); // reversing to put more recent mris first
+            setMris(data);
             setLoading(false);
         });
     }, [studyCode, serverMriData]);
@@ -250,16 +247,19 @@ function MriSelector({
                             }
                         }}
                     >
-                        {mris.map((mri, i) => (
-                            <ToggleGroupItem
-                                value={mri.mriId ?? 'new_mri'}
-                                key={i}
-                                className={getStatusAssets(mri.status).color}
-                            >
-                                <p>{mri.data.title ?? 'Untitled MRI'}</p>
-                                {getStatusAssets(mri.status).logo}
-                            </ToggleGroupItem>
-                        ))}
+                        {/* reversing elements to put more recent mris first */}
+                        <div className="flex flex-col-reverse">
+                            {mris.map((mri, i) => (
+                                <ToggleGroupItem
+                                    value={mri.mriId ?? 'new_mri'}
+                                    key={i}
+                                    className={getStatusAssets(mri.status).color}
+                                >
+                                    <p>{mri.data.title ?? 'Untitled MRI'}</p>
+                                    {getStatusAssets(mri.status).logo}
+                                </ToggleGroupItem>
+                            ))}
+                        </div>
                     </ToggleGroup>
                     <BoxButtonPlus
                         onClick={() => {
@@ -384,7 +384,7 @@ function MriEditorContent({
                                             }
                                             setMriStatus(updatedMriId, MriStatus.Finished).then(
                                                 () => {
-                                                    reloadWindow(); // TODO: Check if I can remove this
+                                                    reloadWindow();
                                                 }
                                             );
                                         });
