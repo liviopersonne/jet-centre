@@ -219,7 +219,7 @@ function MriSelector({
             case 'Finished':
                 return { color: 'text-green-300', logo: <FaCheck /> };
             case 'Validated':
-                return { color: 'text-darkgreen-300', logo: <FaCheckCircle /> };
+                return { color: 'text-teal-300', logo: <FaCheckCircle /> };
             case 'Sent':
                 return { color: 'text-blue-300', logo: <FaPaperPlane /> };
             case 'Expired':
