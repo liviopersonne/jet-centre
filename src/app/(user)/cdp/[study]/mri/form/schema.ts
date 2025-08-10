@@ -21,23 +21,33 @@ export function adminDisplay(cdp: {
     return { ...cdp.user.person, email: cdp.user.person.email ?? undefined };
 }
 
-export const mriCreationSchema = z.object({
-    title: z.string(),
-    wageLowerBound: z.number(),
-    wageUpperBound: z.number(),
-    wageLevel: z.nativeEnum(Level),
-    difficulty: z.nativeEnum(Level),
-    mainDomain: z.nativeEnum(Domain),
-    introductionText: z.string(),
-    descriptionText: z.string(),
-    timeLapsText: z.string(),
-    requiredSkillsText: z.string(),
-});
+export const mriCreationSchema = z
+    .object({
+        title: z.string().min(1, { message: 'Le titre ne doit pas être vide' }),
+        wageLowerBound: z.number().gt(0, { message: 'La rétribution ne doit pas être nulle' }),
+        wageUpperBound: z.number(),
+        wageLevel: z.nativeEnum(Level),
+        difficulty: z.nativeEnum(Level),
+        mainDomain: z.nativeEnum(Domain),
+        introductionText: z.string(),
+        descriptionText: z.string(),
+        timeLapsText: z.string(),
+        requiredSkillsText: z.string(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.wageLowerBound > data.wageUpperBound) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Rétribution haute plus petite que rétribution basse',
+                path: ['wageUpperBound'],
+            });
+        }
+    });
 
 export type MriFormType = z.infer<typeof mriCreationSchema>;
 
 export const DEFAULT_MRI_VALUES: MriFormType = {
-    title: 'Mri sans titre',
+    title: '',
     wageLowerBound: 0,
     wageUpperBound: 0,
     wageLevel: Level.Low,

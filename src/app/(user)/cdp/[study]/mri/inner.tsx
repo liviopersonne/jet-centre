@@ -244,7 +244,7 @@ function MriSelector({
                                     key={i}
                                     className={getStatusAssets(mri.status).color}
                                 >
-                                    <p>{mri.data.title ?? 'Untitled MRI'}</p>
+                                    <p>{mri.data.title ? mri.data.title : '<MRI sans titre>'}</p>
                                     {getStatusAssets(mri.status).logo}
                                 </ToggleGroupItem>
                             ))}
@@ -343,39 +343,51 @@ function MriEditorContent({
                                 className="font-semibold"
                                 onClick={() => {
                                     setLoading(true);
-                                    storeMriData(serverMriId, form.watch()).then((updatedMriId) => {
-                                        if (!updatedMriId) {
+                                    form.trigger().then((validated) => {
+                                        if (!validated) {
                                             setLoading(false);
                                             return;
-                                        }
-                                        loadStudyMris(study).then((data) => {
-                                            if (!data) {
-                                                setLoading(false);
-                                                return;
-                                            }
-                                            const loadedData = data.find(
-                                                (value) => value.mriId === updatedMriId
-                                            );
-                                            if (loadedData === undefined) {
-                                                console.error(
-                                                    `[MriEditorContent] Couldn't find an MRI with the correct id "${updatedMriId}"`
-                                                );
-                                                setLoading(false);
-                                                return;
-                                            }
-                                            if (!equalMri(loadedData.data, form.watch())) {
-                                                console.error(
-                                                    "[MriEditorContent] Saved MRI value doesn't correspond with the form values"
-                                                );
-                                                setLoading(false);
-                                                return;
-                                            }
-                                            setMriStatus(updatedMriId, MriStatus.Finished).then(
-                                                () => {
-                                                    reloadWindow();
+                                        } else {
+                                            storeMriData(serverMriId, form.watch()).then(
+                                                (updatedMriId) => {
+                                                    if (!updatedMriId) {
+                                                        setLoading(false);
+                                                        return;
+                                                    }
+                                                    loadStudyMris(study).then((data) => {
+                                                        if (!data) {
+                                                            setLoading(false);
+                                                            return;
+                                                        }
+                                                        const loadedData = data.find(
+                                                            (value) => value.mriId === updatedMriId
+                                                        );
+                                                        if (loadedData === undefined) {
+                                                            console.error(
+                                                                `[MriEditorContent] Couldn't find an MRI with the correct id "${updatedMriId}"`
+                                                            );
+                                                            setLoading(false);
+                                                            return;
+                                                        }
+                                                        if (
+                                                            !equalMri(loadedData.data, form.watch())
+                                                        ) {
+                                                            console.error(
+                                                                "[MriEditorContent] Saved MRI value doesn't correspond with the form values"
+                                                            );
+                                                            setLoading(false);
+                                                            return;
+                                                        }
+                                                        setMriStatus(
+                                                            updatedMriId,
+                                                            MriStatus.Finished
+                                                        ).then(() => {
+                                                            reloadWindow();
+                                                        });
+                                                    });
                                                 }
                                             );
-                                        });
+                                        }
                                     });
                                 }}
                             >
