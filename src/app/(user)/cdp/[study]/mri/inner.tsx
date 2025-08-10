@@ -204,17 +204,21 @@ function MriSelector({
     const getStatusAssets = (status: MriStatus) => {
         switch (status) {
             case 'InProgress':
-                return { color: 'text-yellow-300', logo: <FaPen /> };
+                return { text: "En cours d'écriture", color: 'text-yellow-300', logo: <FaPen /> };
             case 'Finished':
-                return { color: 'text-green-300', logo: <FaCheck /> };
+                return {
+                    text: 'En cours de validation',
+                    color: 'text-green-300',
+                    logo: <FaCheck />,
+                };
             case 'Validated':
-                return { color: 'text-teal-300', logo: <FaCheckCircle /> };
+                return { text: 'Validé', color: 'text-teal-300', logo: <FaCheckCircle /> };
             case 'Sent':
-                return { color: 'text-blue-300', logo: <FaPaperPlane /> };
+                return { text: 'Envoyé', color: 'text-blue-300', logo: <FaPaperPlane /> };
             case 'Expired':
-                return { color: 'text-red-300', logo: <FaClock /> };
+                return { text: 'Expiré', color: 'text-red-300', logo: <FaClock /> };
             default:
-                return { color: 'text-white-300', logo: <FaQuestion /> };
+                return { text: 'Inconnu', color: 'text-white-300', logo: <FaQuestion /> };
         }
     };
 
@@ -245,7 +249,16 @@ function MriSelector({
                                     className={getStatusAssets(mri.status).color}
                                 >
                                     <p>{mri.data.title ? mri.data.title : '<MRI sans titre>'}</p>
-                                    {getStatusAssets(mri.status).logo}
+                                    <div className="group relative inline-block">
+                                        {getStatusAssets(mri.status).logo}
+
+                                        <div
+                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block 
+                  bg-gray-800 text-white text-sm rounded px-2 py-1 whitespace-nowrap shadow-lg"
+                                        >
+                                            {getStatusAssets(mri.status).text}
+                                        </div>
+                                    </div>
                                 </ToggleGroupItem>
                             ))}
                         </div>
