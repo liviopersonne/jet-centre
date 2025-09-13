@@ -107,6 +107,9 @@ interface OtherEnv {
      * This breaks middleware logic.
      */
     DEV_MODE?: true;
+    APP_NAME_FIRST?: string;
+    APP_NAME_LAST?: string;
+    APP_NAME_PATCH?: string;
 }
 
 declare namespace NodeJS {

@@ -17,9 +17,16 @@ import { LabeledSeparator } from '@/components/ui/separator';
 export function AuthLayout({ title, button }: { title: string; button: ReactNode }) {
     return (
         <div className="flex flex-col flex-1 md:flex-none items-center space-y-10">
-            <div className="text-5xl font-bold">
-                <span>JET&nbsp;</span>
-                <span className="text-primary">CENTRE</span>
+            <div className="flex items-end space-x-2">
+                <div className="text-5xl font-bold">
+                    <span>{process.env.APP_NAME_FIRST ?? 'JET'}&nbsp;</span>
+                    <span className="text-primary">{process.env.APP_NAME_LAST ?? 'CENTRE'}</span>
+                </div>
+                {process.env.APP_NAME_PATCH && (
+                    <span className="text-base font-semibold text-gray-500">
+                        {process.env.APP_NAME_PATCH}
+                    </span>
+                )}
             </div>
             <div className="text-2xl">/ʤɛt &apos;sɛntə/</div>
             <div className="md:hidden text-3xl">{title}</div>
