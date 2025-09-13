@@ -1,0 +1,18 @@
+name: verify-lockfile
+
+on:
+    pull_request:
+    push:
+
+jobs:
+    check-lockfile:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v3
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+
+            - name: Verify bun.lock is up to date
+              run: bun install --frozen-lockfile
