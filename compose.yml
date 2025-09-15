@@ -2,6 +2,7 @@ services:
     app:
         container_name: jc-app
         build:
+            dockerfile: docker/app
             context: .
             target: dev
         restart: always
@@ -30,8 +31,10 @@ services:
             - postgres
 
     studio:
-        image: oven/bun:1
         container_name: jc-studio
+        build:
+            dockerfile: docker/studio
+            context: .
         working_dir: /app
         volumes:
             - .:/app
@@ -39,7 +42,6 @@ services:
             - '5555:5555'
         env_file:
             - .env
-        command: sh -c "bun install --save-dev prisma && bunx prisma studio --hostname 0.0.0.0 --port 5555"
         networks:
             - internet
             - db-network

@@ -6,12 +6,11 @@ DB_CONTAINER_NAME := jc-postgres
 
 APP_SERVICE_NAME := app
 DB_SERVICE_NAME := postgres
-CACHE_SERVICE_NAME := cache
+STUDIO_SERVICE_NAME := studio
 
 PREFIX := bun
 
-DEV_COMPOSE := compose.dev.yml
-PROD_COMPOSE := compose.prod.yml
+DEV_COMPOSE := compose.yml
 
 TMUX_SESSION := dev-logs
 
@@ -40,7 +39,7 @@ slogs:
 	tmux new-session -d -s $(TMUX_SESSION) -n logs "$(COMPOSE) -f $(DEV_COMPOSE) logs -f $(DB_SERVICE_NAME)"
 	tmux split-window -v -t $(TMUX_SESSION):0 "$(COMPOSE) -f $(DEV_COMPOSE) logs -f $(APP_SERVICE_NAME)"
 	tmux select-pane -t $(TMUX_SESSION):0.0
-	tmux split-window -h -t $(TMUX_SESSION):0.0 "$(COMPOSE) -f $(DEV_COMPOSE) logs -f $(CACHE_SERVICE_NAME)"
+	tmux split-window -h -t $(TMUX_SESSION):0.0 "$(COMPOSE) -f $(DEV_COMPOSE) logs -f $(STUDIO_SERVICE_NAME)"
 	tmux select-layout -t $(TMUX_SESSION):0 tiled
 	tmux select-pane -t $(TMUX_SESSION):0.0
 	tmux attach-session -t $(TMUX_SESSION)
@@ -59,20 +58,4 @@ seed-db:
 	$(COMPOSE) -f $(DEV_COMPOSE) exec $(APP_SERVICE_NAME) $(PREFIX) run db:seed:dev
 
 
-# Prod
-build-prod:
-	$(COMPOSE) -f $(PROD_COMPOSE) build
-
-up-prod:
-	$(COMPOSE) -f $(PROD_COMPOSE) up -d
-
-down-prod:
-	$(COMPOSE) -f $(PROD_COMPOSE) down
-
-migrate-prod:
-	$(COMPOSE) -f $(PROD_COMPOSE) exec $(APP_SERVICE_NAME) $(PREFIX) run migrate:deploy
-
-deploy: build-prod up-prod
-
-.PHONY: up down build reload logs slogs reset-db migrate-db seed-db build-prod up-prod down-prod deploy
-
+.PHONY: up down build reload logs slogs reset-db migrate-db seed-db
