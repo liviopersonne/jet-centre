@@ -6,7 +6,10 @@ import prisma from '@/db';
 import {
     MRIModifyFieldErrorCode,
     MRIModifyFieldResult,
+    MRIValidateErrorCode,
+    MRIValidateResult,
     MriWithStudyAndAssignees,
+    MriWithValidation,
     PublicMRI,
     StudyMRIListItem,
 } from '@/types/mri';
@@ -91,6 +94,20 @@ export async function getMRIFromId(
                 },
             },
             lastEditedAction: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            validationActions: {
                 include: {
                     user: {
                         include: {
@@ -200,7 +217,7 @@ const registerViewerActionOnMRIs = async (viewer: Viewer, ids: string[]) => {
 
     await prisma.action.updateMany({
         where: {
-            Mri: {
+            editedMri: {
                 some: {
                     id: {
                         in: ids,
@@ -350,4 +367,129 @@ export async function createEmptyStudyMRI(
     studyCode: string
 ): Promise<StudyMRIListItem> {
     return getStudyMRIListItemFromMri(await createEmptyMRI(viewer, studyCode));
+}
+
+export async function getMRIsToValidate(viewer: Viewer): Promise<StudyMRIListItem[]> {
+    return (
+        await prisma.mri.findMany({
+            where: {
+                AND: [
+                    {
+                        status: {
+                            in: ['InProgress', 'Finished', 'InProgress'],
+                        },
+                    },
+                    isMriAccessibleToViewer(viewer),
+                ],
+            },
+            select: {
+                id: true,
+                status: true,
+                title: true,
+            },
+            orderBy: {
+                status: 'desc',
+            },
+        })
+    ).map(getStudyMRIListItemFromMri);
+}
+
+export async function getMRIFromIdWithValidation(
+    viewer: Viewer,
+    mriId: string
+): Promise<MriWithValidation | null> {
+    return await prisma.mri.findFirst({
+        include: {
+            study: {
+                include: {
+                    cdps: true,
+                    information: true,
+                },
+            },
+            lastEditedAction: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            validationActions: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        where: {
+            AND: [
+                {
+                    id: mriId,
+                },
+                isMriAccessibleToViewer(viewer),
+            ],
+        },
+    });
+}
+
+export async function validateMRI(viewer: Viewer, mriId: string): Promise<MRIValidateResult> {
+    try {
+        const validated = await prisma.mri.findUnique({
+            where: {
+                id: mriId,
+            },
+            include: {
+                validationActions: true,
+            },
+        });
+
+        if (!validated) {
+            return { status: 'error', error: MRIValidateErrorCode.NoMRIOrLocked };
+        }
+
+        const alreadyValidated = validated.validationActions.some(
+            (action) => action.userId == viewer.id
+        );
+
+        if (alreadyValidated) {
+            return { status: 'success' };
+        }
+
+        const now = new Date();
+
+        await prisma.mri.update({
+            where: {
+                id: mriId,
+            },
+            data: {
+                validationActions: {
+                    create: {
+                        date: now,
+                        user: {
+                            connect: {
+                                id: viewer.id,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return { status: 'success' };
+    } catch {
+        return { status: 'error', error: MRIValidateErrorCode.Unknown };
+    }
 }

@@ -1,9 +1,6 @@
 'use server';
 
-/**
- * Module that communicates with the database for the CDPs.
- */
-
+import { ExtendedPosition } from '@/data/positions';
 import prisma from '@/db';
 
 /**
@@ -16,7 +13,7 @@ import prisma from '@/db';
 export async function get_user_sidebar_info(name: {
     firstName: string;
     lastName: string;
-}): Promise<{ missions: string[]; position: string } | undefined> {
+}): Promise<{ missions: string[]; position: ExtendedPosition } | undefined> {
     try {
         const person = await prisma.person.findUnique({
             where: { name: { firstName: name.firstName, lastName: name.lastName } },
