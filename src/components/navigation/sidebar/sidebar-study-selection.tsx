@@ -23,7 +23,9 @@ export function StudySelection({
                 <PaginationItem>
                     <PaginationPrevious
                         onClick={() =>
-                            setSelectedStudyIndex((selectedStudyIndex - 1 + studies.length) % studies.length)
+                            setSelectedStudyIndex(
+                                (selectedStudyIndex - 1 + studies.length) % studies.length
+                            )
                         }
                     ></PaginationPrevious>
                 </PaginationItem>
@@ -38,7 +40,9 @@ export function StudySelection({
                 ))}
                 <PaginationItem>
                     <PaginationNext
-                        onClick={() => setSelectedStudyIndex((selectedStudyIndex + 1) % studies.length)}
+                        onClick={() =>
+                            setSelectedStudyIndex((selectedStudyIndex + 1) % studies.length)
+                        }
                     />
                 </PaginationItem>
             </PaginationContent>

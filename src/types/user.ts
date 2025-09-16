@@ -14,5 +14,5 @@ export type StudyWithCode = Prisma.StudyGetPayload<{
     omit: {
         informationId: true;
         studyProceedingsId: true;
-    }
+    };
 }>;

@@ -30,9 +30,7 @@ export function SidebarList({ sidebarGroups, studyCode }: SidebarListProps) {
                                 >
                                     <Link
                                         href={
-                                            studyCode
-                                                ? '/cdp/' + studyCode + item.href
-                                                : item.href
+                                            studyCode ? '/cdp/' + studyCode + item.href : item.href
                                         }
                                     >
                                         <item.icon />
