@@ -1,4 +1,3 @@
-import { Level } from '@prisma/client';
 import { StaticImageData } from 'next/image';
 
 import Cyber from '@/../public/mri/domains/cyber.png';
