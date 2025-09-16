@@ -51,15 +51,3 @@ export const DOMAIN_IMAGES: { [key: string]: DoubleImage } = {
             'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/14507c52-c18e-338a-1272-4d4e76b83571.png',
     },
 } as const;
-
-export const DIFFICULTY_IMAGES: Record<Level, string> = {
-    Low: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/aa0aa2c2-9aaf-46f8-ae91-8c28953b02bc.png',
-    Medium: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/d790eeff-772d-4aa7-91a0-f1883414b675.png',
-    High: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/7781ba0c-a348-4722-ba77-beee6bbb5f51.png',
-};
-
-export const PAYCHECK_LEVEL_IMAGES: Record<Level, string> = {
-    Low: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/aa0aa2c2-9aaf-46f8-ae91-8c28953b02bc.png',
-    Medium: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/d790eeff-772d-4aa7-91a0-f1883414b675.png',
-    High: 'https://mcusercontent.com/d64b9431d63c83512b8b612ee/images/7781ba0c-a348-4722-ba77-beee6bbb5f51.png',
-};

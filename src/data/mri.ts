@@ -9,7 +9,6 @@ import {
     MRIValidateErrorCode,
     MRIValidateResult,
     MriWithStudyAndAssignees,
-    MriWithValidation,
     PublicMRI,
     StudyMRIListItem,
 } from '@/types/mri';
@@ -392,58 +391,6 @@ export async function getMRIsToValidate(viewer: Viewer): Promise<StudyMRIListIte
             },
         })
     ).map(getStudyMRIListItemFromMri);
-}
-
-export async function getMRIFromIdWithValidation(
-    viewer: Viewer,
-    mriId: string
-): Promise<MriWithValidation | null> {
-    return await prisma.mri.findFirst({
-        include: {
-            study: {
-                include: {
-                    cdps: true,
-                    information: true,
-                },
-            },
-            lastEditedAction: {
-                include: {
-                    user: {
-                        include: {
-                            person: {
-                                select: {
-                                    firstName: true,
-                                    lastName: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            validationActions: {
-                include: {
-                    user: {
-                        include: {
-                            person: {
-                                select: {
-                                    firstName: true,
-                                    lastName: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-        where: {
-            AND: [
-                {
-                    id: mriId,
-                },
-                isMriAccessibleToViewer(viewer),
-            ],
-        },
-    });
 }
 
 export async function validateMRI(viewer: Viewer, mriId: string): Promise<MRIValidateResult> {

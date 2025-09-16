@@ -51,19 +51,6 @@ export type MriWithStudyAndAssignees = Prisma.MriGetPayload<{
     };
 }>;
 
-export type MriWithValidation = Prisma.MriGetPayload<{
-    include: {
-        study: {
-            include: {
-                cdps: true;
-                information: true;
-            };
-        };
-        lastEditedAction: ClassicLastActionPayload;
-        validationActions: ClassicLastActionPayload;
-    };
-}>;
-
 export enum MRIModifyFieldErrorCode {
     NoMRIOrLocked,
     Unknown,

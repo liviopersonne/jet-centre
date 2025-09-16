@@ -59,13 +59,9 @@ export function reloadWindow() {
     if (typeof window != 'undefined') location.reload();
 }
 
-export interface PersonName {
+interface PersonName {
     firstName: string;
     lastName: string;
-}
-
-export interface PersonNameEmail extends PersonName {
-    email: string;
 }
 
 /**
@@ -73,36 +69,6 @@ export interface PersonNameEmail extends PersonName {
  */
 export function personName({ firstName, lastName }: PersonName) {
     return firstName + ' ' + lastName;
-}
-
-/**
- * Returns a string with the full name of person and the email address between parentheses.
- */
-function personNameEmail({ email, ...name }: PersonNameEmail): string {
-    return `${personName(name)} (${email})`;
-}
-
-/**
- * Returns a string with the full name and email address
- * of every person of the given list of people
- */
-export function peopleNameEmail(people: PersonNameEmail[]): string {
-    const len = people.length;
-    if (len === 0) return personNameEmail(people[0]);
-
-    let display = '';
-    for (let i = 0; i < len; ++i) {
-        display += `${personNameEmail(people[i])}`;
-        if (i === len - 1) {
-            break;
-        } else if (i === len - 2) {
-            display += ' et ';
-        } else {
-            display += ', ';
-        }
-    }
-
-    return display;
 }
 
 /**
@@ -120,19 +86,4 @@ export function stringifyAddress(address: Address): string {
         ', ' +
         address.country
     );
-}
-
-/**
- * Escape HTML in user input, that shouldn't contain HTML.
- *
- * This function must be used on user input that is put as string in an HTML content (dangerouslySetInnerHTML, HTML email, etc.)
- */
-export function sanitiseHtml(value: string) {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/\n/g, '<br>');
 }
