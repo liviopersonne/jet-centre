@@ -9,19 +9,34 @@ import useSWR from 'swr';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/shadcn-io/spinner';
-import { MRIStatusColor, MRIStatusText } from '@/lib/mri';
+import { MRIStatusColor, MRIStatusText, MRIValidationCountColor } from '@/lib/mri';
 import { cn } from '@/lib/utils';
 import { StudyMRIListItem } from '@/types/mri';
 
 import { MRIValidator } from './mri-validator';
 
-function MRIListItemStatus({ status }: { status: MriStatus }) {
-    const color = MRIStatusColor(status);
+function MRIListItemStatusValidate({
+    status,
+    validationCount,
+}: {
+    status: MriStatus;
+    validationCount: number;
+}) {
+    const statusColor = MRIStatusColor(status);
+    const validationColor = MRIValidationCountColor(validationCount);
 
     return (
-        <div className={cn('text-' + color, 'flex gap-2 place-items-center')}>
-            {MRIStatusText(status)}
-            <FaCircle className={cn('fill-' + color, 'size-2')} />
+        <div className="flex gap-2 place-items-center">
+            <div className={cn('text-' + statusColor)}>{MRIStatusText(status)}</div>
+            <FaCircle className="fill-gray-500 size-2" />
+            <div
+                className={cn(
+                    'font-mono',
+                    status == MriStatus.Finished && 'text-' + validationColor
+                )}
+            >
+                {validationCount}/2
+            </div>
         </div>
     );
 }
@@ -35,16 +50,25 @@ function MRIListItem({
     selected: boolean;
     select: () => void;
 }) {
+    const noTitle = mri.mriTitle === null || mri.mriTitle.trim() == '';
     return (
         <Button
             variant={selected ? 'secondary' : 'ghost'}
             onClick={select}
             className="w-full flex justify-between"
         >
-            <div className="text-left w-[60%] overflow-hidden bg-clip-text text-transparent bg-gradient-to-r from-foreground from-80% to-transparent">
-                {mri.mriTitle}
+            <div
+                className={cn(
+                    noTitle && 'italic',
+                    'text-left w-[60%] overflow-hidden bg-clip-text text-transparent bg-gradient-to-r from-foreground from-80% to-transparent'
+                )}
+            >
+                {!noTitle ? mri.mriTitle : 'Mri sans titre'}
             </div>
-            <MRIListItemStatus status={mri.mriStatus} />
+            <MRIListItemStatusValidate
+                status={mri.mriStatus}
+                validationCount={mri.mriValidationCount}
+            />
         </Button>
     );
 }

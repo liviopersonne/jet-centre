@@ -21,11 +21,12 @@ import useSWR from 'swr';
 import BirdLogo from '@/../public/mri/bird.png';
 
 import { getDifficulty, getDomain, getPay, ImageElt } from '@/app/(user)/cdp/[study]/mri/figures';
+import { Box, BoxContent, BoxHeader } from '@/components/boxes/boxes';
 import { useViewer } from '@/components/hooks/use-viewer';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/shadcn-io/spinner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { validateMRI } from '@/data/mri';
+import { sendMRI, validateMRI } from '@/data/mri';
 import { cn } from '@/lib/utils';
 import {
     CONTACT_EMAIL,
@@ -37,6 +38,7 @@ import {
 } from '@/settings/links';
 import {
     ClassicLastActionPayload,
+    MRISendErrorCode,
     mriValidateErrorCodeToString,
     MRIValidateResult,
     MriWithStudyAndAssignees,
@@ -59,6 +61,16 @@ function TimeAgo({ date }: { date: Date }) {
     return <>{formatDistanceToNow(date, { addSuffix: true, locale: fr })}</>;
 }
 
+enum MriIssueSeverity {
+    Low,
+    High,
+}
+
+type MriIssue = {
+    message: string;
+    severity: MriIssueSeverity;
+};
+
 export function MRIValidator({ mriId }: { mriId: string }) {
     const {
         data: mri,
@@ -69,6 +81,8 @@ export function MRIValidator({ mriId }: { mriId: string }) {
         revalidateOnFocus: false,
         dedupingInterval: 60 * 1000, // 1 minute
     });
+
+    const [sendError, setSendError] = useState('');
 
     const viewerResult = useViewer();
 
@@ -87,6 +101,26 @@ export function MRIValidator({ mriId }: { mriId: string }) {
     const requiredSkillsLoading = isLoading || mri === undefined || mri === null;
     const timeLapsTextLoading = isLoading || mri === undefined || mri === null;
     const descriptionTextLoading = isLoading || mri === undefined || mri === null;
+
+    const populateIssue = (prop: string | null, message: string, severity: MriIssueSeverity) =>
+        prop == null || prop == '' ? [{ message, severity }] : [];
+
+    const detectedIssues: MriIssue[] =
+        mri !== undefined
+            ? [
+                  ...populateIssue(mri.title, 'Absence de titre', MriIssueSeverity.High),
+                  ...populateIssue(
+                      mri.descriptionText,
+                      'Absence de description',
+                      MriIssueSeverity.Low
+                  ),
+                  ...populateIssue(
+                      mri.requiredSkillsText,
+                      'Absence de compétences recherchées',
+                      MriIssueSeverity.Low
+                  ),
+              ]
+            : [];
 
     const h4cn = 'text-2xl font-bold my-1 text-mri-headers';
 
@@ -148,6 +182,25 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                 revalidate: false,
             }
         );
+    };
+
+    const sendMRICallback = async () => {
+        if (!mri?.id) return;
+
+        const sendResult = await sendMRI(viewer, mriId);
+        if (sendResult.status == 'error') {
+            switch (sendResult.error) {
+                case MRISendErrorCode.NoMRIOrLocked:
+                    setSendError('Impossible de modifier le MRI');
+                    break;
+                case MRISendErrorCode.NotValidated:
+                    setSendError("Le MRI n'a pas été validé et ne peut donc pas être envoyé");
+                    break;
+                case MRISendErrorCode.Unknown:
+                    setSendError("Erreur lors de l'envoi: " + sendResult.message);
+                    break;
+            }
+        }
     };
 
     const isUserValidated =
@@ -341,20 +394,49 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                     <p className="mb-8"></p>
                 </div>
             </div>
+            {detectedIssues.length > 0 && (
+                <div className="absolute left-4 bottom-4 max-w-[25%]">
+                    <Box>
+                        <BoxHeader className="font-bold">Problèmes détectés</BoxHeader>
+                        <BoxContent>
+                            {detectedIssues.map((issue) => (
+                                <div
+                                    key={issue.message}
+                                    className={cn(
+                                        issue.severity == MriIssueSeverity.High
+                                            ? 'text-red-500'
+                                            : 'text-orange-500'
+                                    )}
+                                >
+                                    {issue.message}
+                                </div>
+                            ))}
+                        </BoxContent>
+                    </Box>
+                </div>
+            )}
             <div className="absolute right-4 bottom-4">
-                <Button
-                    variant="accept"
-                    disabled={isUserValidated || !mri}
-                    onClick={validateMRICallback}
-                >
-                    {isUserValidated ? 'Validé' : 'Valider'} (
-                    {isValidating ? (
-                        <Spinner variant="circle" className="size-4" />
-                    ) : (
-                        (mri ? mri.validationActions.length : 0) + '/2'
-                    )}
-                    )
-                </Button>
+                {mri?.validationActions.length == 1 ? (
+                    <Button variant="highlight" disabled={isValidating} onClick={sendMRICallback}>
+                        {sendError == ''} ? (<div className="text-red-500">{sendError}</div>
+                        ): (isValidating ? (
+                        <Spinner variant="circle" className="size-4" />) : ( Envoyer le MRI ))
+                    </Button>
+                ) : (
+                    <Button
+                        variant="accept"
+                        disabled={isUserValidated || !mri}
+                        onClick={validateMRICallback}
+                    >
+                        {isUserValidated ? 'Validé' : 'Valider'} (
+                        {isValidating ? (
+                            <Spinner variant="circle" className="size-4" />
+                        ) : (
+                            (mri ? mri.validationActions.length : 0) + '/2'
+                        )}
+                        )
+                    </Button>
+                )}
             </div>
         </div>
     );
