@@ -15,6 +15,7 @@ import {
     MRISendErrorCode,
     mriSendErrorCodeToString,
     MRISendResult,
+    MriToValidate,
     MRIValidateErrorCode,
     MRIValidateResult,
     MriWithStudyAndAssignees,
@@ -107,6 +108,63 @@ export async function getMRIFromId(
             study: {
                 include: {
                     cdps: true,
+                    information: true,
+                },
+            },
+            lastEditedAction: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            validationActions: {
+                include: {
+                    user: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        where: {
+            AND: [
+                {
+                    id: mriId,
+                },
+                isMriAccessibleToViewer(viewer),
+            ],
+        },
+    });
+}
+
+async function getMriToValidateById(viewer: Viewer, mriId: string): Promise<MriToValidate | null> {
+    return await prisma.mri.findFirst({
+        include: {
+            study: {
+                include: {
+                    cdps: {
+                        include: {
+                            user: {
+                                include: {
+                                    person: true,
+                                },
+                            },
+                        },
+                    },
                     information: true,
                 },
             },
@@ -487,7 +545,7 @@ export async function sendMRI(viewer: Viewer, mriId: string): Promise<MRISendRes
             return { status: 'error', error: MRISendErrorCode.NotValidated };
         }
 
-        const mri = await getMRIFromId(viewer, mriId);
+        const mri = await getMriToValidateById(viewer, mriId);
         if (mri === null) return { status: 'error', error: MRISendErrorCode.Unknown };
 
         const mriParsingResult = getPublishableMri(mri);
