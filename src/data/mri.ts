@@ -504,6 +504,9 @@ export async function validateMRI(viewer: Viewer, mriId: string): Promise<MRIVal
             return { status: 'success' };
         }
 
+        const newStatus =
+            validated.validationActions.length > 0 ? MriStatus.Validated : validated.status;
+
         const now = new Date();
 
         await prisma.mri.update({
@@ -521,6 +524,7 @@ export async function validateMRI(viewer: Viewer, mriId: string): Promise<MRIVal
                         },
                     },
                 },
+                status: newStatus,
             },
         });
         return { status: 'success' };
@@ -535,13 +539,20 @@ export async function sendMRI(viewer: Viewer, mriId: string): Promise<MRISendRes
             where: {
                 id: mriId,
             },
+            include: {
+                _count: {
+                    select: {
+                        validationActions: true,
+                    },
+                },
+            },
         });
 
         if (!validated) {
             return { status: 'error', error: MRISendErrorCode.NoMRIOrLocked };
         }
 
-        if (validated.status != MriStatus.Validated) {
+        if (validated.status != MriStatus.Validated && validated._count.validationActions > 0) {
             return { status: 'error', error: MRISendErrorCode.NotValidated };
         }
 

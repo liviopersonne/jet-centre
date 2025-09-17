@@ -416,7 +416,7 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                 </div>
             )}
             <div className="absolute right-4 bottom-4">
-                {mri?.validationActions.length == 1 ? (
+                {mri?.validationActions.length && mri?.validationActions.length >= 1 ? (
                     <Button variant="highlight" disabled={isValidating} onClick={sendMRICallback}>
                         {sendError == ''} ? (<div className="text-red-500">{sendError}</div>
                         ): (isValidating ? (
