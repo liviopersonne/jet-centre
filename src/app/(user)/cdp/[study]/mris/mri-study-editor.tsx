@@ -43,8 +43,13 @@ function MRIListItem({
             onClick={select}
             className="w-full flex justify-between"
         >
-            <div className="text-left w-[60%] overflow-hidden bg-clip-text text-transparent bg-gradient-to-r from-foreground from-80% to-transparent">
-                {mri.mriTitle}
+            <div
+                className={cn(
+                    mri.mriTitle == null && 'italic',
+                    'text-left w-[60%] overflow-hidden bg-clip-text text-transparent bg-gradient-to-r from-foreground from-80% to-transparent'
+                )}
+            >
+                {mri.mriTitle ?? 'Sans titre'}
             </div>
             <MRIListItemStatus status={mri.mriStatus} />
         </Button>
