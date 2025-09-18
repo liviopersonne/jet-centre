@@ -48,6 +48,7 @@ import {
     MRIModifyFieldResult,
     MriWithStudyAndAssignees,
     StudyMRIListItem,
+    mriFinishErrorCodeToString,
     mriModifyFieldErrorCodeToString,
 } from '@/types/mri';
 
@@ -464,6 +465,7 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                 // The best option would be to use a web socket anyways :)
                 if (finishResult.status == 'error') {
                     globalMutate(['/api/mri/study/', mri.study.information.code]);
+                    toast.error(mriFinishErrorCodeToString(finishResult.error));
                     return Promise.reject();
                 }
                 return {
