@@ -3,7 +3,7 @@ import { getStudyMRIsFromCode } from '@/data/mri';
 import { getViewer } from '@/data/user';
 import { StudyParams } from '@/routes';
 
-import MRIEditor from './mri-editor';
+import MriStudyEditor from './mri-study-editor';
 
 export default async function MRIs({ params }: StudyParams) {
     const viewerResult = await getViewer();
@@ -22,5 +22,5 @@ export default async function MRIs({ params }: StudyParams) {
 
     const initialMRIs = await getStudyMRIsFromCode(viewerResult.viewer, studyCode);
 
-    return <MRIEditor studyCode={studyCode} initialMRIs={initialMRIs} />;
+    return <MriStudyEditor studyCode={studyCode} initialMRIs={initialMRIs} />;
 }

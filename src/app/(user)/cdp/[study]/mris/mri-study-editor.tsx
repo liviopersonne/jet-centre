@@ -54,7 +54,7 @@ function MRIListItem({
 const fetcherMrisStudy = (url: string, studyCode: string): Promise<StudyMRIListItem[]> =>
     fetch(url + studyCode).then((r) => r.json());
 
-export default function MRIEditor({
+export default function MriStudyEditor({
     initialMRIs,
     studyCode,
 }: {
