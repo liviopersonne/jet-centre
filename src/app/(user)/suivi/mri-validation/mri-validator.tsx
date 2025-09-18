@@ -16,7 +16,7 @@ import {
     FaXTwitter,
 } from 'react-icons/fa6';
 import { toast } from 'sonner';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 
 import BirdLogo from '@/../public/mri/bird.png';
 
@@ -42,6 +42,7 @@ import {
     mriValidateErrorCodeToString,
     MRIValidateResult,
     MriWithStudyAndAssignees,
+    StudyMRIListItem,
 } from '@/types/mri';
 
 const fetcher = (url: string, mriId: string): Promise<MriWithStudyAndAssignees> =>
@@ -81,6 +82,8 @@ export function MRIValidator({ mriId }: { mriId: string }) {
         revalidateOnFocus: false,
         dedupingInterval: 60 * 1000, // 1 minute
     });
+
+    const { mutate: globalMutate } = useSWRConfig();
 
     const [sendError, setSendError] = useState('');
 
@@ -181,6 +184,19 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                 throwOnError: false,
                 revalidate: false,
             }
+        );
+
+        globalMutate(
+            ['/api/mri/list-validate'],
+            (currentMris?: StudyMRIListItem[]) => {
+                if (!currentMris) return [];
+                return currentMris.map((mriItem) =>
+                    mriItem.id === mri.id
+                        ? { ...mriItem, mriValidationCount: mriItem.mriValidationCount + 1 }
+                        : mriItem
+                );
+            },
+            { revalidate: true }
         );
     };
 
