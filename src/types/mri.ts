@@ -129,6 +129,23 @@ export function mriSendErrorCodeToString(code: MRISendErrorCode) {
     return data[code];
 }
 
+export enum MRIFinishErrorCode {
+    Unknown,
+    NoMRIOrLocked,
+}
+
+export type MRIFinishResult =
+    | { status: 'success' }
+    | { status: 'error'; error: MRIFinishErrorCode; message?: string };
+
+export function mriFinishErrorCodeToString(code: MRIFinishErrorCode) {
+    const data: Record<MRIFinishErrorCode, string> = {
+        [MRIFinishErrorCode.Unknown]: 'Erreur inconnue',
+        [MRIFinishErrorCode.NoMRIOrLocked]: 'Aucun MRI trouvé, ou MRI non modifiable',
+    };
+    return data[code];
+}
+
 export interface PublishableMri {
     cdps: PersonNameEmail[];
     title: string;

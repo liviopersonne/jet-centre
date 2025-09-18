@@ -9,6 +9,8 @@ import { plainTextMRI } from '@/lib/mailchimp/plain-mri';
 import { getPublishableMri } from '@/lib/mailchimp/publish-mri';
 import { MailChimpList } from '@/types/mailchimp';
 import {
+    MRIFinishErrorCode,
+    MRIFinishResult,
     MRIModifyFieldErrorCode,
     MRIModifyFieldResult,
     MriPublishabilityStatus,
@@ -651,5 +653,31 @@ export async function sendMRI(viewer: Viewer, mriId: string): Promise<MRISendRes
         return { status: 'success' };
     } catch {
         return { status: 'error', error: MRISendErrorCode.Unknown };
+    }
+}
+
+export async function finishMRI(viewer: Viewer, mriId: string): Promise<MRIFinishResult> {
+    try {
+        const ids = (
+            await prisma.mri.updateManyAndReturn({
+                where: isMriEditable(viewer, mriId),
+                data: {
+                    status: 'Finished',
+                },
+                select: {
+                    id: true,
+                },
+            })
+        ).map((el) => el.id);
+
+        registerViewerActionOnMRIs(viewer, ids);
+
+        if (ids.length > 0) {
+            return { status: 'success' };
+        } else {
+            return { status: 'error', error: MRIFinishErrorCode.NoMRIOrLocked };
+        }
+    } catch {
+        return { status: 'error', error: MRIFinishErrorCode.Unknown };
     }
 }
