@@ -15,8 +15,12 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
+            
+            - name: Prettier install
+              run: npm install prettier prettier-plugin-prisma --save-dev
 
             - name: Prettify code
               uses: creyD/prettier_action@v4.3
               with:
+                  allow_other_plugins: true
                   prettier_options: --c .
