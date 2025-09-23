@@ -77,26 +77,20 @@ model CompanyInfos {
 
 /// Domain of the study or of a company.
 enum Domain {
-  /**
-   * IA
-   */
+  // IA
 
   Chatbot
   DataScience
   MachineLearning
   IntelligenceArtificielle
 
-  /**
-   * Dev
-   */
+  // Dev
 
   WebDev
   MobileDev
   AppDev
 
-  /**
-   * Networks
-   */
+  // Networks
 
   Cybersecurity
   Cryptography
@@ -104,16 +98,12 @@ enum Domain {
   Telecommunications
   Internet
 
-  /**
-   * Systems
-   */
+  // Systems
 
   IoT
   EmbeddedSystems
 
-  /**
-   * Image
-   */
+  // Image
 
   Image
   ComputerVision
@@ -121,9 +111,7 @@ enum Domain {
   /// Prefixed by d_ because a variant must begin with a letter.
   d_3D
 
-  /**
-   * SES
-   */
+  // SES
 
   MarketAnalysis
   StateOfTheArt
