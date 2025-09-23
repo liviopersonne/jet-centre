@@ -22,5 +22,7 @@ jobs:
             - name: Prettify code
               uses: creyD/prettier_action@v4.6
               with:
+                  dry: true
+                  no_commit: true
                   allow_other_plugins: true
                   prettier_options: --c .
