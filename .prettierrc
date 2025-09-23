@@ -3,5 +3,14 @@
     "printWidth": 100,
     "endOfLine": "lf",
     "singleQuote": true,
-    "trailingComma": "es5"
+    "trailingComma": "es5",
+    "plugins": ["prettier-plugin-prisma"],
+    "overrides": [
+        {
+            "files": "*.prisma",
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
 }
