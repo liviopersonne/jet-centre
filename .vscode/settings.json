@@ -7,5 +7,9 @@
     "eslint.validate": ["javascript", "typescript", "typescriptreact"],
     "files.watcherExclude": {
         "**/*.prisma": true
+    },
+    "[prisma]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
     }
 }
