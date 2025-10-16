@@ -65,7 +65,7 @@ After you've installed Docker using [this guide](https://docs.docker.com/engine/
 
 First make sure that Docker is running with `docker run hello-world`
 
-> To check your containers run `docker ps -a`
+> To check your containers run `docker ps -a`. Right now you should only have `hello-world` but after you've run the project, the other containers should appear.
 
 Now initialize the database and run the project locally:
 
