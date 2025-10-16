@@ -14,6 +14,7 @@ Start by installing all project dependencies.
 
 ```bash
 bun install
+bun i # Quicker way to write the command
 ```
 
 ### Setup your .env
@@ -62,29 +63,20 @@ After you've installed Docker using [this guide](https://docs.docker.com/engine/
 
 ### Running the project
 
-First make sure that Docker is running (see [website](https://docs.docker.com/engine/install)), then activate the Docker containers:
-
-```bash
-docker start app-dev jet-centre-postgres-1 jet-centre-cache-1
-```
+First make sure that Docker is running with `docker run hello-world`
 
 > To check your containers run `docker ps -a`
 
-Now initialize the database:
-
-- Makefile
+Now initialize the database and run the project locally:
 
 ```bash
-make migrate
+make migrate-db
+make up
 ```
 
-You can now run the project:
+You can now access the local project at [http://localhost:5005/](http://localhost:5005/)
 
-- Makefile
-
-```bash
-make dev
-```
+Check the logs of your project with `make logs`
 
 **Check out the [Makefile](../Makefile) for other commands you can run !**
 
