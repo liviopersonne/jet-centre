@@ -3,8 +3,7 @@ name: pipeline
 on:
     push:
         branches:
-            - preprod
-            - prod
+            - deploy-docker
         tags:
             - 'v*.*.*'
 
@@ -12,7 +11,7 @@ jobs:
     deploy:
         name: build && push image to docker hub
         runs-on: ubuntu-latest
-        if: github.repository == 'Telecom-Etude/jet-centre'
+        if: github.repository == 'liviopersonne/jet-centre'
 
         steps:
             - name: Checkout source
@@ -27,19 +26,23 @@ jobs:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+            - name: Set Docker repo
+              run: echo "DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/jet-centre" >> $GITHUB_ENV
+
             - name: Set Docker tags
               id: vars
-              run: |
-                  if [[ "${GITHUB_REF_TYPE}" == "branch" ]]; then
-                    if [[ "${GITHUB_REF_NAME}" == "prod" ]]; then
-                      echo "TAGS=smeag0l/jet-centre:prod,smeag0l/jet-centre:sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
-                    elif [[ "${GITHUB_REF_NAME}" == "preprod" ]]; then
-                      echo "TAGS=smeag0l/jet-centre:preprod,smeag0l/jet-centre:sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
-                    fi
-                  elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-                    VERSION="${GITHUB_REF_NAME}"
-                    echo "TAGS=smeag0l/jet-centre:${VERSION},smeag0l/jet-centre:latest" >> $GITHUB_ENV
-                  fi
+              run:
+                  echo "TAGS=${{ env.DOCKER_REPO }}:testing-deployment" >> $GITHUB_ENV
+                  # if [[ "${GITHUB_REF_TYPE}" == "branch" ]]; then
+                  #   if [[ "${GITHUB_REF_NAME}" == "prod" ]]; then
+                  #     echo "TAGS=${{ env.DOCKER_REPO }}:prod,${{ env.DOCKER_REPO }}:sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
+                  #   elif [[ "${GITHUB_REF_NAME}" == "preprod" ]]; then
+                  #     echo "TAGS=${{ env.DOCKER_REPO }}:preprod,${{ env.DOCKER_REPO }}:sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
+                  #   fi
+                  # elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+                  #   VERSION="${GITHUB_REF_NAME}"
+                  #   echo "TAGS=${{ env.DOCKER_REPO }}:${VERSION},${{ env.DOCKER_REPO }}:latest" >> $GITHUB_ENV
+                  # fi
 
             - name: Build and push image
               id: build

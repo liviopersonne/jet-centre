@@ -1,7 +1,10 @@
+# Ce fichier sert de modèle pour les fichiers compose qui se trouvent dans la VM
+# Il n'est pas utilisé dans la base de code, il faut le copier et le compléter sur la VM
+
 services:
     app:
         container_name: jc-app
-        image: smeag0l/jet-centre:prod
+        image: $USERNAME/jet-centre:prod # Compléter USERNAME et changer prod en preprod si besoin
         env_file:
             - .env.production
         environment:
@@ -9,7 +12,7 @@ services:
 
         restart: always
         ports:
-            - '[::]:80:3000'
+            - '[::]:8000:3000' # C'est 8010:3000 sur preprod
         networks:
             - db-network
             - internet
@@ -37,7 +40,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ~/.docker/config.json:/config.json:ro
-        command: --interval 30 jc-app
+        command: --interval 30 jc-app # On peut faire varier la durée de l'intervalle (actuellement c'est 900 sur preprod)
 
 networks:
     db-network:

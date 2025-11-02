@@ -60,7 +60,7 @@ interface SeedEnv {
      * */
     ADMIN_EMAIL: string;
     /**
-     * Position of the initial admin user. Defaults to 'Info'. The position determines the rights you will have access to when first signing in
+     * Position of the initial admin user. Defaults to 'info'. The position determines the rights you will have access to when first signing in
      */
     ADMIN_POSITION?: string;
     /**
@@ -93,6 +93,9 @@ interface MailchimpEnv {
 }
 
 interface OtherEnv {
+    /**
+     * The url where this project is running
+     */
     WEBSITE_URL: string;
     /**
      * @see ./docs/database.md
