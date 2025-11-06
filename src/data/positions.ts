@@ -28,7 +28,7 @@ type PositionNames = {
 
 const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNames }> = {
     admin: {
-        isExecutive: false,
+        isExecutive: true,
         names: {
             short: 'Admin',
             male: 'Administrateur',
@@ -99,12 +99,12 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
         },
     },
     info: {
-        isExecutive: true,
+        isExecutive: false,
         names: {
-            short: 'RespoInfo',
-            male: 'Responsable informatique',
-            female: 'Responsable informatique',
-            neutral: 'Responsable informatique',
+            short: 'Info',
+            male: 'Membre pôle info',
+            female: 'Membre pôle info',
+            neutral: 'Membre pôle info',
         },
     },
 };
