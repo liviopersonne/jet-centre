@@ -4,7 +4,7 @@ import { Gender } from '@/types/misc';
 
 import { Viewer } from './user';
 
-const positions = [
+const positionList = [
     'admin',
     'president',
     'internal_vice_president',
@@ -17,7 +17,7 @@ const positions = [
     'info',
 ] as const;
 
-export type Position = (typeof positions)[number];
+export type Position = (typeof positionList)[number];
 
 type PositionNames = {
     short: string;
@@ -109,8 +109,12 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
     },
 };
 
+export function getValidPositions(): readonly string[] {
+    return positionList;
+}
+
 export function isValidPosition(pos: string): pos is Position {
-    return (positions as readonly string[]).includes(pos);
+    return (positionList as readonly string[]).includes(pos);
 }
 
 export function isExecutiveBoard(viewer: Viewer): boolean {
