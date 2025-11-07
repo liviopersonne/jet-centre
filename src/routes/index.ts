@@ -1,3 +1,4 @@
+import { Position } from '@/data/positions';
 import { ROLES_SIDEBARS } from '@/settings/sidebars/sidebars';
 import { RoleSideBar } from '@/settings/sidebars/types';
 
@@ -18,7 +19,7 @@ export function isNonAuthPublicRoute(pathname: string) {
     return false;
 }
 
-export function isAuthorisedToRoute(pathname: string, position: keyof typeof ROLES_SIDEBARS) {
+export function isAuthorisedToRoute(pathname: string, position: Position) {
     if (pathname === '/') return true;
     if (pathname.startsWith('/cdp/')) return true;
     if (!Object.keys(ROLES_SIDEBARS).includes(position)) return false;
