@@ -1,3 +1,6 @@
+import FilesBrowser from '@/components/google/file-browser';
+import MailBrowser from '@/components/google/mail-browser';
+import { MailSender } from '@/components/google/mail-sender';
 import { LogoBird } from '@/components/logo/logo';
 
 export default async function HomePage() {
@@ -21,4 +24,14 @@ export default async function HomePage() {
             </div>
         </div>
     );
+}
+
+// TODO: Fonctions non utilisées ici
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function dummy() {
+    <div>
+        <FilesBrowser />
+        <MailBrowser />
+        <MailSender />
+    </div>;
 }
