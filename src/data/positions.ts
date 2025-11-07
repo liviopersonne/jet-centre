@@ -19,12 +19,12 @@ const positionList = [
 
 export type Position = (typeof positionList)[number];
 
-type PositionNames = {
+interface PositionNames {
     short: string;
     male: string;
     female: string;
     neutral: string;
-};
+}
 
 const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNames }> = {
     admin: {
@@ -107,7 +107,7 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
             neutral: 'Membre pôle info',
         },
     },
-};
+} as const;
 
 export function getValidPositions(): readonly string[] {
     return positionList;
