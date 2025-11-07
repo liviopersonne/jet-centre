@@ -15,6 +15,7 @@ const positionList = [
     'general_secretary',
     'commercial_director',
     'info',
+    'default',
 ] as const;
 
 export type Position = (typeof positionList)[number];
@@ -105,6 +106,15 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
             male: 'Membre pôle info',
             female: 'Membre pôle info',
             neutral: 'Membre pôle info',
+        },
+    },
+    default: {
+        isExecutive: false,
+        names: {
+            short: 'JET',
+            male: 'JetMan',
+            female: 'JetWoman',
+            neutral: 'JetMan/JetWoman',
         },
     },
 } as const;
