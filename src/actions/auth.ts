@@ -117,7 +117,6 @@ const config = {
                         create: {
                             admin: {
                                 create: {
-                                    position: 'default',
                                     image,
                                 },
                             },

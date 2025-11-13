@@ -58,9 +58,9 @@ async function loggedInMiddleware(
 
     if (isNonAuthPublicRoute(pathname)) return NextResponse.next();
 
-    if (!position || !isValidPosition(position)) return rewrite(ROUTES.invalidPosition, request);
+    if (!isValidPosition(position)) return rewrite(ROUTES.invalidPosition, request);
 
-    const isAuthorised = isAuthorisedToRoute(pathname, position as Position);
+    const isAuthorised = isAuthorisedToRoute(pathname, position as Position | undefined);
 
     if (!isAuthorised) return rewrite(ROUTES.unauthorised, request);
 

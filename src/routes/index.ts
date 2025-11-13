@@ -19,9 +19,10 @@ export function isNonAuthPublicRoute(pathname: string) {
     return false;
 }
 
-export function isAuthorisedToRoute(pathname: string, position: Position) {
+export function isAuthorisedToRoute(pathname: string, position?: Position) {
     if (pathname === '/') return true;
     if (pathname.startsWith('/cdp/')) return true;
+    if (!position) return false;
     if (!Object.keys(ROLES_SIDEBARS).includes(position)) return false;
     const sidebar: RoleSideBar = ROLES_SIDEBARS[position] as RoleSideBar;
     return sidebar.sidebar.find((section) =>
