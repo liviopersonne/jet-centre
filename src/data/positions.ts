@@ -113,7 +113,7 @@ export function getValidPositions(): readonly (Position | undefined)[] {
     return [...positionList, undefined];
 }
 
-export function isValidPosition(pos?: string) {
+export function isValidPosition(pos?: string): pos is Position | undefined {
     return !pos || (positionList as readonly string[]).includes(pos);
 }
 
