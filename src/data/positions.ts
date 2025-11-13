@@ -15,7 +15,6 @@ const positionList = [
     'general_secretary',
     'commercial_director',
     'info',
-    'default',
 ] as const;
 
 export type Position = (typeof positionList)[number];
@@ -56,7 +55,7 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
             short: 'VPO',
             male: 'Vice-président opérationnel',
             female: 'Vice-présidente opérationnel',
-            neutral: 'Vice-président.E opérationnel',
+            neutral: 'Vice-président.e opérationnel',
         },
     },
     external_vice_president: {
@@ -108,23 +107,14 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
             neutral: 'Membre pôle info',
         },
     },
-    default: {
-        isExecutive: false,
-        names: {
-            short: 'JET',
-            male: 'JetMan',
-            female: 'JetWoman',
-            neutral: 'JetMan/JetWoman',
-        },
-    },
 } as const;
 
-export function getValidPositions(): readonly string[] {
-    return positionList;
+export function getValidPositions(): readonly (Position | undefined)[] {
+    return [...positionList, undefined];
 }
 
-export function isValidPosition(pos: string): pos is Position {
-    return (positionList as readonly string[]).includes(pos);
+export function isValidPosition(pos?: string) {
+    return !pos || (positionList as readonly string[]).includes(pos);
 }
 
 export function isExecutiveBoard(viewer: Viewer): boolean {
@@ -133,10 +123,25 @@ export function isExecutiveBoard(viewer: Viewer): boolean {
 }
 
 export function getPositionName(
-    position: Position,
+    position?: string,
     gender?: Gender
 ): { name: string; shortName: string } {
-    const infos = positionInfos[position];
+    if (!isValidPosition()) {
+        return {
+            name: 'Invalid',
+            shortName: 'Invalid',
+        };
+    }
+    const defaultInfos = {
+        isExecutive: false,
+        names: {
+            short: 'JET',
+            male: 'JetMan',
+            female: 'JetWoman',
+            neutral: 'JetMan/JetWoman',
+        },
+    };
+    const infos = position ? positionInfos[position as Position] : defaultInfos;
     return {
         name:
             gender === Gender.Male
