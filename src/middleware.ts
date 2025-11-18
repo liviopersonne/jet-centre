@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 import type { Session } from 'next-auth';
 
 import { auth } from './actions/auth';
-import { isValidPosition, Position } from './data/positions';
+import { isValidPosition, AuthPosition } from './data/positions';
 import { isAuthorisedToRoute, isNonAuthPublicRoute, ROUTES } from './routes';
 
 /**
@@ -58,9 +58,9 @@ async function loggedInMiddleware(
 
     if (isNonAuthPublicRoute(pathname)) return NextResponse.next();
 
-    if (!isValidPosition(position)) return rewrite(ROUTES.invalidPosition, request);
+    if (position && !isValidPosition(position)) return rewrite(ROUTES.invalidPosition, request);
 
-    const isAuthorised = isAuthorisedToRoute(pathname, position as Position | undefined);
+    const isAuthorised = isAuthorisedToRoute(pathname, position as AuthPosition | undefined);
 
     if (!isAuthorised) return rewrite(ROUTES.unauthorised, request);
 

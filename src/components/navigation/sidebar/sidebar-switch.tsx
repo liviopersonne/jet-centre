@@ -72,7 +72,7 @@ export function SidebarSwitch({
     }
     const viewer = viewerResult.viewer;
 
-    const positionStr = viewer.position ? getPositionName(viewer.position).shortName : 'Non défini';
+    const positionStr = getPositionName(viewer.position).shortName;
 
     const roleSidebar: RoleSideBar | undefined = viewer.position
         ? ROLES_SIDEBARS[viewer.position]

@@ -1,4 +1,4 @@
-import { Position } from '@/data/positions';
+import { AuthPosition } from '@/data/positions';
 import { ROLES_SIDEBARS } from '@/settings/sidebars/sidebars';
 import { RoleSideBar } from '@/settings/sidebars/types';
 
@@ -19,7 +19,7 @@ export function isNonAuthPublicRoute(pathname: string) {
     return false;
 }
 
-export function isAuthorisedToRoute(pathname: string, position?: Position) {
+export function isAuthorisedToRoute(pathname: string, position?: AuthPosition) {
     if (pathname === '/') return true;
     if (pathname.startsWith('/cdp/')) return true;
     if (!position) return false;
