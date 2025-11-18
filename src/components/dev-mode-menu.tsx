@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ViewerResult } from '@/data/user';
 
-import { UserEditor } from './info/users/user-editor';
-import { getAdmins } from './info/users/users';
+import { UserEditor } from '../app/(user)/info/users/user-editor';
+import { getAdmins } from '../app/(user)/info/users/users';
 
 interface Admin {
     adminId: string;
