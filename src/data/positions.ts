@@ -4,20 +4,20 @@ import { Gender } from '@/types/misc';
 
 import { Viewer } from './user';
 
-const positionList = [
-    'admin',
-    'president',
-    'internal_vice_president',
-    'operational_vice_president',
-    'external_vice_president',
-    'treasurer',
-    'vice_treasurer',
-    'general_secretary',
-    'commercial_director',
-    'info',
-] as const;
+export enum AdminPosition {
+    admin = 'admin',
+    president = 'president',
+    internal_vice_president = 'internal_vice_president',
+    operational_vice_president = 'operational_vice_president',
+    external_vice_president = 'external_vice_president',
+    treasurer = 'treasurer',
+    vice_treasurer = 'vice_treasurer',
+    general_secretary = 'general_secretary',
+    commercial_director = 'commercial_director',
+    info = 'info',
+}
 
-export type Position = (typeof positionList)[number];
+export type AuthPosition = AdminPosition;
 
 interface PositionNames {
     short: string;
@@ -26,7 +26,7 @@ interface PositionNames {
     neutral: string;
 }
 
-const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNames }> = {
+const positionInfos: Record<AdminPosition, { isExecutive: boolean; names: PositionNames }> = {
     admin: {
         isExecutive: true,
         names: {
@@ -109,12 +109,12 @@ const positionInfos: Record<Position, { isExecutive: boolean; names: PositionNam
     },
 } as const;
 
-export function getValidPositions(): readonly (Position | undefined)[] {
-    return [...positionList, undefined];
+export function getValidPositions(): readonly string[] {
+    return Object.keys(AdminPosition);
 }
 
-export function isValidPosition(pos?: string): pos is Position | undefined {
-    return !pos || (positionList as readonly string[]).includes(pos);
+export function isValidPosition(pos: string): pos is AdminPosition {
+    return getValidPositions().includes(pos);
 }
 
 export function isExecutiveBoard(viewer: Viewer): boolean {
@@ -126,7 +126,7 @@ export function getPositionName(
     position?: string,
     gender?: Gender
 ): { name: string; shortName: string } {
-    if (!isValidPosition()) {
+    if (position && !isValidPosition(position)) {
         return {
             name: 'Invalid',
             shortName: 'Invalid',
@@ -141,7 +141,7 @@ export function getPositionName(
             neutral: 'JetMan/JetWoman',
         },
     };
-    const infos = position ? positionInfos[position as Position] : defaultInfos;
+    const infos = position ? positionInfos[position as AdminPosition] : defaultInfos;
     return {
         name:
             gender === Gender.Male

@@ -6,13 +6,13 @@ import { auth } from '@/actions/auth';
 import prisma from '@/db';
 import { StudyWithCode } from '@/types/user';
 
-import { isExecutiveBoard, isValidPosition, Position } from './positions';
+import { isExecutiveBoard, isValidPosition, AuthPosition } from './positions';
 
 export type Viewer = Omit<User, 'id'> & {
     id: NonNullable<User['id']>;
     firstName: string;
     lastName: string;
-    position?: Position;
+    position?: AuthPosition;
 };
 
 enum ViewerResultErrorType {
@@ -34,7 +34,7 @@ export const getViewer = async (): Promise<ViewerResult> => {
             message: 'Got null session while trying to get viewer',
         };
     const position = session.user.position;
-    if (!isValidPosition(position))
+    if (position !== undefined && !isValidPosition(position))
         return {
             status: 'error',
             type: ViewerResultErrorType.InvalidPosition,

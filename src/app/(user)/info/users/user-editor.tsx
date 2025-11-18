@@ -44,7 +44,7 @@ export function UserEditor({ adminId, email, position }: UserEditorProps) {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                        {getValidPositions().map((position, i) => (
+                        {[undefined, ...getValidPositions()].map((position, i) => (
                             <DropdownMenuItem
                                 key={i}
                                 onSelect={async () => {
