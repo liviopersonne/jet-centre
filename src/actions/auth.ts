@@ -159,7 +159,7 @@ const config = {
             profile?: Profile;
         }) {
             if (trigger === 'update') {
-                token.position = (await getUserPosition(token.email)) ?? token.position;
+                token.position = await getUserPosition(token.email);
             }
             if (!trigger) return token;
 
