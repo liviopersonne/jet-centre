@@ -9,9 +9,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <ViewerProvider value={viewerResult}>
             {
                 <div className="w-full h-full">
-                    <div className="absolute top-14 right-4">
-                        <DevModeMenu viewerResult={viewerResult} />
-                    </div>
+                    {process.env.DEV_MODE ? (
+                        <div className="absolute top-14 right-4">
+                            <DevModeMenu viewerResult={viewerResult} />
+                        </div>
+                    ) : null}
                     <div className="w-full h-full">{children}</div>
                 </div>
             }
