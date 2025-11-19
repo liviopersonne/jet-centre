@@ -4,6 +4,7 @@ import localFont from 'next/font/local';
 import { SessionProvider } from 'next-auth/react';
 import React, { ReactNode } from 'react';
 
+import { DevModeMenu } from '@/components/dev-mode-menu';
 import { ViewerProvider } from '@/components/hooks/use-viewer';
 import { SidebarApp } from '@/components/navigation/sidebar/sidebar-app';
 import { TopBar } from '@/components/navigation/topbar';
@@ -70,6 +71,11 @@ async function AdminSideBar({ children }: { children: ReactNode }) {
                                 <TopBar />
                             </header>
                             <main className="flex flex-1 flex-col gap-4 overflow-auto p-4 pt-0">
+                                {process.env.DEV_MODE ? (
+                                    <div className="absolute top-14 right-4">
+                                        <DevModeMenu viewerResult={viewerResult} />
+                                    </div>
+                                ) : null}
                                 <div className="flex-1 min-h-0">{children}</div>
                             </main>
                         </SidebarInset>
