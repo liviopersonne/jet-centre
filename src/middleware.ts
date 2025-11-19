@@ -86,8 +86,6 @@ export default auth(async (request: NextAuthRequest) => {
     const position = session?.user?.position;
     const { pathname } = request.nextUrl;
 
-    if (process.env.DEV_MODE) return NextResponse.next();
-
     if (!isLoggedIn) {
         if (isNonAuthPublicRoute(pathname)) return NextResponse.next();
         if (pathname === ROUTES.signIn) return NextResponse.next();
