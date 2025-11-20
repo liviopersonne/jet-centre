@@ -582,11 +582,13 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                 {}
                             </div>
                             <div className="flex flex-col @sm:flex-row">
-                                {mri?.mainDomain !== null && mri?.mainDomain !== undefined ? (
-                                    <ImageElt {...getDomain(mri?.mainDomain)} />
-                                ) : (
-                                    <Skeleton />
-                                )}
+                                <ImageElt
+                                    {...getDomain(
+                                        mri?.mainDomain ??
+                                            mri?.study.information.domains[0] ??
+                                            DEFAULT_MRI_VALUES.mainDomain
+                                    )}
+                                />
                                 <ImageElt
                                     {...getPay(
                                         mri?.wageLowerBound ?? 0,
