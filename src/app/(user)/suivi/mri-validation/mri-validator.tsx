@@ -76,7 +76,7 @@ function detectMriIssues(mri: Mri): MriIssue[] {
     const detectedIssues: MriIssue[] = [];
 
     for (const [key, value] of Object.entries(mri)) {
-        if (value == null || value == '') {
+        if ((value == null || value == '') && key != 'validationActions') {
             detectedIssues.push({
                 message: `Absence de ${key}`,
                 severity: key == 'title' ? MriIssueSeverity.High : MriIssueSeverity.Low,
