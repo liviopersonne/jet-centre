@@ -50,7 +50,10 @@ export async function DevModeMenu({
         <div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="highlight" className="relative rounded-full w-16 h-16 z-50">
+                    <Button
+                        variant="highlight"
+                        className="relative rounded-full w-16 h-16 z-50 opacity-70 hover:opacity-100"
+                    >
                         <Hammer />
                     </Button>
                 </DropdownMenuTrigger>
