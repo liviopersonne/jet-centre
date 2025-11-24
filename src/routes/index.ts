@@ -10,10 +10,8 @@ export const MIDDLEWARE_ERRORS = {
     invalidPosition: 'invalid-position',
 };
 
+// See: https://github.com/Telecom-Etude/jet-centre/issues/215
 const NON_AUTH_PUBLIC_ROUTE_PREFIXES = [ERROR_PREFIX];
-
-// TODO: Properly test public routes before making them available to the public
-// const NON_AUTH_PUBLIC_ROUTE_PREFIXES = [ERROR_PREFIX, '/mri-mailing-list', '/posulter'];
 
 export function isNonAuthPublicRoute(pathname: string) {
     for (const prefix of NON_AUTH_PUBLIC_ROUTE_PREFIXES)

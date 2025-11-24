@@ -42,7 +42,6 @@ export async function DevModeMenu({
     }
 
     if (!viewerAdmin) {
-        // The user is not an admin
         return;
     }
 
