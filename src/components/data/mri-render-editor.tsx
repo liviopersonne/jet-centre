@@ -155,10 +155,7 @@ function EditableImage<T extends string | number | symbol>({
     return (
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-                <Button
-                    variant={'outline'}
-                    className="bg-transparent hover:bg-transparent size-fit"
-                >
+                <Button variant={'outline'} className="bg-transparent hover:bg-transparent h-56">
                     <ImageElt {...getValue(value)} />
                 </Button>
             </DropdownMenuTrigger>
@@ -563,13 +560,23 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                     updateValue={updateDomain}
                                     getValue={getDomain}
                                 />
-                                {/* TODO */}
-                                <ImageElt
-                                    {...getWage(
-                                        mri?.wageLowerBound ?? 0,
-                                        mri?.wageUpperBound ?? 0,
-                                        mri?.wageLevel ?? 'Medium'
-                                    )}
+                                <EditableImage<Level>
+                                    initValue={mri?.wageLevel ?? Level.Medium}
+                                    possibleValues={LEVELS}
+                                    updateValue={(l) =>
+                                        updateWage(
+                                            mri?.wageLowerBound ?? 0,
+                                            mri?.wageUpperBound ?? 0,
+                                            l
+                                        )
+                                    }
+                                    getValue={(l) =>
+                                        getWage(
+                                            mri?.wageLowerBound ?? 0,
+                                            mri?.wageUpperBound ?? 0,
+                                            l
+                                        )
+                                    }
                                 />
                                 <EditableImage<Level>
                                     initValue={mri?.difficulty ?? Level.Medium}

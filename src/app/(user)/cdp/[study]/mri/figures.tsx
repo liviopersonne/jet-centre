@@ -20,7 +20,7 @@ export function ImageElt({
     image: StaticImageData;
 }) {
     return (
-        <figure className="text-center">
+        <figure className="text-center h-min">
             <Image src={image} alt={'Image de ' + value} />
             <figcaption className="text-center text-sm mt-2 mb-[-5px]">{label}</figcaption>
             <p className="text-center font-bold text-mri-headers m-0">{value}</p>
