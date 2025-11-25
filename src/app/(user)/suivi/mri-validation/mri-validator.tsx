@@ -20,7 +20,7 @@ import useSWR, { useSWRConfig } from 'swr';
 
 import BirdLogo from '@/../public/mri/bird.png';
 
-import { getDifficulty, getDomain, getPay, ImageElt } from '@/app/(user)/cdp/[study]/mri/figures';
+import { getDifficulty, getDomain, getWage, ImageElt } from '@/app/(user)/cdp/[study]/mri/figures';
 import { Box, BoxContent, BoxHeader } from '@/components/boxes/boxes';
 import { useViewer } from '@/components/hooks/use-viewer';
 import { Button } from '@/components/ui/button';
@@ -306,7 +306,7 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                                     <Skeleton />
                                 )}
                                 <ImageElt
-                                    {...getPay(
+                                    {...getWage(
                                         mri?.wageLowerBound ?? 0,
                                         mri?.wageUpperBound ?? 0,
                                         mri?.wageLevel ?? 'Medium'

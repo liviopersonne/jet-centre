@@ -32,11 +32,11 @@ export function getDomain(domain: Domain) {
     return { label: 'DOMAIN', value: DOMAINS[domain].display, image: DOMAINS[domain].image.next };
 }
 
-export function getPay(wageLowerBound: number, wageUpperBound: number, pay_level: Level) {
+export function getWage(wageLowerBound: number, wageUpperBound: number, wageLevel: Level) {
     const label = 'RÉTRIBUTION';
     const value = `${wageLowerBound}€ - ${wageUpperBound}€`;
 
-    switch (pay_level) {
+    switch (wageLevel) {
         case 'Low':
             return { label, value, image: PayLow };
         case 'Medium':

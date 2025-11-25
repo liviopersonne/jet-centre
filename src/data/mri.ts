@@ -1,6 +1,6 @@
 'use server';
 
-import { Mri, MriStatus, Prisma } from '@prisma/client';
+import { Domain, Level, Mri, MriStatus, Prisma } from '@prisma/client';
 
 import { sendCampaign, SendCampaignErrorCode } from '@/actions/mailchimp';
 import prisma from '@/db';
@@ -423,6 +423,88 @@ export async function setMRIDescriptionText(
             where: isMriEditable(viewer, mriId),
             data: {
                 descriptionText,
+            },
+            select: {
+                id: true,
+            },
+        })
+    ).map((el) => el.id);
+
+    registerViewerActionOnMRIs(viewer, ids);
+
+    if (ids.length > 0) {
+        return { status: 'success' };
+    } else {
+        return { status: 'error', error: MRIModifyFieldErrorCode.NoMRIOrLocked };
+    }
+}
+
+export async function setMRIDifficulty(
+    viewer: Viewer,
+    mriId: string,
+    difficulty: Level
+): Promise<MRIModifyFieldResult> {
+    const ids = (
+        await prisma.mri.updateManyAndReturn({
+            where: isMriEditable(viewer, mriId),
+            data: {
+                difficulty,
+            },
+            select: {
+                id: true,
+            },
+        })
+    ).map((el) => el.id);
+
+    registerViewerActionOnMRIs(viewer, ids);
+
+    if (ids.length > 0) {
+        return { status: 'success' };
+    } else {
+        return { status: 'error', error: MRIModifyFieldErrorCode.NoMRIOrLocked };
+    }
+}
+
+export async function setMRIDomain(
+    viewer: Viewer,
+    mriId: string,
+    mainDomain: Domain
+): Promise<MRIModifyFieldResult> {
+    const ids = (
+        await prisma.mri.updateManyAndReturn({
+            where: isMriEditable(viewer, mriId),
+            data: {
+                mainDomain,
+            },
+            select: {
+                id: true,
+            },
+        })
+    ).map((el) => el.id);
+
+    registerViewerActionOnMRIs(viewer, ids);
+
+    if (ids.length > 0) {
+        return { status: 'success' };
+    } else {
+        return { status: 'error', error: MRIModifyFieldErrorCode.NoMRIOrLocked };
+    }
+}
+
+export async function setMRIWage(
+    viewer: Viewer,
+    mriId: string,
+    wageLowerBound: number,
+    wageUpperBound: number,
+    wageLevel: Level
+): Promise<MRIModifyFieldResult> {
+    const ids = (
+        await prisma.mri.updateManyAndReturn({
+            where: isMriEditable(viewer, mriId),
+            data: {
+                wageLowerBound,
+                wageUpperBound,
+                wageLevel,
             },
             select: {
                 id: true,
