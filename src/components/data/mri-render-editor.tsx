@@ -1,9 +1,9 @@
 'use client';
 
-import { MriStatus, Prisma } from '@prisma/client';
+import { Domain, Level, MriStatus, Prisma } from '@prisma/client';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import Image from 'next/image';
+import Image, { StaticImageData } from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -22,18 +22,22 @@ import { useDebouncedCallback } from 'use-debounce';
 
 import BirdLogo from '@/../public/mri/bird.png';
 
-import { getDifficulty, getDomain, getPay, ImageElt } from '@/app/(user)/cdp/[study]/mri/figures';
+import { getDifficulty, getDomain, getWage, ImageElt } from '@/app/(user)/cdp/[study]/mri/figures';
 import { useViewer } from '@/components/hooks/use-viewer';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     finishMRI,
     setMRIDescriptionText,
+    setMRIDifficulty,
+    setMRIDomain,
     setMRIIntroductionText,
+    setMRIWage,
     setMRIRequiredSkillsText,
     setMRITimeLapsText,
     setMRITitle,
 } from '@/data/mri';
 import { DEFAULT_MRI_VALUES } from '@/data/mri-defaults';
+import { DOMAINS, EnumInfo, LEVELS } from '@/db/types';
 import { cn } from '@/lib/utils';
 import {
     CONTACT_EMAIL,
@@ -53,6 +57,12 @@ import {
 } from '@/types/mri';
 
 import { Button } from '../ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { Spinner } from '../ui/shadcn-io/spinner';
 
 const fetcher = (url: string, mriId: string): Promise<MriWithStudyAndAssignees> =>
@@ -123,6 +133,49 @@ function EditableText({
     );
 }
 
+interface ImageData {
+    label: string;
+    value: string;
+    image: StaticImageData;
+}
+
+function EditableImage<T extends string | number | symbol>({
+    initValue,
+    possibleValues,
+    updateValue,
+    getValue,
+}: {
+    initValue: T;
+    possibleValues: Record<T, EnumInfo>;
+    updateValue: (value: T) => Promise<void>;
+    getValue: (value: T) => ImageData;
+}) {
+    const [value, setValue] = useState<T>(initValue);
+
+    return (
+        <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant={'outline'}
+                    className="bg-transparent hover:bg-transparent size-fit"
+                >
+                    <ImageElt {...getValue(value)} />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="overflow-y-scroll max-h-60">
+                {(Object.keys(possibleValues) as T[]).map((k, i) => (
+                    <DropdownMenuItem
+                        key={i}
+                        onClick={() => updateValue(k).then(() => setValue(k))}
+                    >
+                        {possibleValues[k].display}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
 function TimeAgo({ date }: { date: Date }) {
     const [, setNow] = useState(new Date());
 
@@ -176,6 +229,64 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
         mutate((x) => x, {
             revalidate: true,
         });
+    };
+
+    const handleMRIModifyFieldResult = (res: MRIModifyFieldResult): string => {
+        if (res.status == 'error') {
+            const msg = mriModifyFieldErrorCodeToString(res.error);
+            toast.error(msg);
+            return msg;
+        }
+        return '';
+    };
+
+    const updateElement = async (
+        updatedElement: object,
+        updateMri: () => Promise<MRIModifyFieldResult>
+    ) => {
+        if (!mri?.id) return;
+
+        const now = new Date();
+        const updatedAction: Prisma.ActionGetPayload<ClassicLastActionPayload> = {
+            ...mri.lastEditedAction,
+            date: now,
+            user: {
+                id: viewer.id,
+                person: {
+                    firstName: viewer.firstName,
+                    lastName: viewer.lastName,
+                },
+            },
+        };
+
+        // Update locally immediately
+        // It is REALLY important to not revalidate here
+        mutate(
+            async () => {
+                const error = handleMRIModifyFieldResult(await updateMri());
+                // Here I don't think returning the updated data via the server action makes sense...
+                // The best option would be to use a web socket anyways :)
+                if (error) {
+                    globalMutate(['/api/mri/study/', mri.study.information.code]);
+                    return Promise.reject();
+                }
+                return {
+                    ...mri,
+                    ...updatedElement,
+                    lastEditedAction: updatedAction,
+                };
+            },
+            {
+                optimisticData: {
+                    ...mri,
+                    ...updatedElement,
+                    lastEditedAction: updatedAction,
+                },
+                rollbackOnError: true,
+                throwOnError: false,
+                revalidate: false,
+            }
+        );
     };
 
     const updateTitle = async (text: string) => {
@@ -239,205 +350,65 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
         );
     };
 
-    const handleMRIModifyFieldResult = (res: MRIModifyFieldResult): string => {
-        if (res.status == 'error') {
-            const msg = mriModifyFieldErrorCodeToString(res.error);
-            toast.error(msg);
-            return msg;
-        }
-        return '';
-    };
-
-    const updateIntroduction = async (text: string) => {
-        if (!mri?.id) return;
-
-        const now = new Date();
-        const updatedAction: Prisma.ActionGetPayload<ClassicLastActionPayload> = {
-            ...mri.lastEditedAction,
-            date: now,
-            user: {
-                id: viewer.id,
-                person: {
-                    firstName: viewer.firstName,
-                    lastName: viewer.lastName,
-                },
-            },
-        };
-
-        // Update locally immediately
-        // It is REALLY important to not revalidate here
-        mutate(
-            async () => {
-                const error = handleMRIModifyFieldResult(
-                    await setMRIIntroductionText(viewer, mriId, text)
-                );
-                // Here I don't think returning the updated data via the server action makes sense...
-                // The best option would be to use a web socket anyways :)
-                if (error) {
-                    return Promise.reject();
-                }
-                return {
-                    ...mri,
-                    introductionText: text,
-                    lastEditedAction: updatedAction,
-                };
-            },
+    const updateIntroduction = (text: string) =>
+        updateElement(
             {
-                optimisticData: {
-                    ...mri,
-                    introductionText: text,
-                    lastEditedAction: updatedAction,
-                },
-                rollbackOnError: true,
-                throwOnError: false,
-                revalidate: false,
-            }
+                introductionText: text,
+            },
+            () => setMRIIntroductionText(viewer, mriId, text)
+        );
+
+    const updateRequiredSkillsText = (text: string) =>
+        updateElement(
+            {
+                requiredSkillsText: text,
+            },
+            () => setMRIRequiredSkillsText(viewer, mriId, text)
+        );
+
+    const updateTimeLapsText = (text: string) =>
+        updateElement(
+            {
+                timeLapsText: text,
+            },
+            () => setMRITimeLapsText(viewer, mriId, text)
+        );
+
+    const updatedescriptionText = (text: string) =>
+        updateElement(
+            {
+                descriptionText: text,
+            },
+            () => setMRIDescriptionText(viewer, mriId, text)
+        );
+
+    const updateDifficulty = async (difficulty: Level) => {
+        updateElement(
+            {
+                difficulty: difficulty,
+            },
+            () => setMRIDifficulty(viewer, mriId, difficulty)
         );
     };
 
-    const updateRequiredSkillsText = async (text: string) => {
-        if (!mri?.id) return;
-
-        const now = new Date();
-        const updatedAction: Prisma.ActionGetPayload<ClassicLastActionPayload> = {
-            ...mri.lastEditedAction,
-            date: now,
-            user: {
-                id: viewer.id,
-                person: {
-                    firstName: viewer.firstName,
-                    lastName: viewer.lastName,
-                },
-            },
-        };
-
-        // Update locally immediately
-        // It is REALLY important to not revalidate here
-        mutate(
-            async () => {
-                const error = handleMRIModifyFieldResult(
-                    await setMRIRequiredSkillsText(viewer, mriId, text)
-                );
-                // Here I don't think returning the updated data via the server action makes sense...
-                // The best option would be to use a web socket anyways :)
-                if (error) {
-                    return Promise.reject();
-                }
-                return {
-                    ...mri,
-                    requiredSkillsText: text,
-                    lastEditedAction: updatedAction,
-                };
-            },
+    const updateDomain = async (domain: Domain) => {
+        updateElement(
             {
-                optimisticData: {
-                    ...mri,
-                    requiredSkillsText: text,
-                    lastEditedAction: updatedAction,
-                },
-                rollbackOnError: true,
-                throwOnError: false,
-                revalidate: false,
-            }
+                mainDomain: domain,
+            },
+            () => setMRIDomain(viewer, mriId, domain)
         );
     };
 
-    const updateTimeLapsText = async (text: string) => {
-        if (!mri?.id) return;
-
-        const now = new Date();
-        const updatedAction: Prisma.ActionGetPayload<ClassicLastActionPayload> = {
-            ...mri.lastEditedAction,
-            date: now,
-            user: {
-                id: viewer.id,
-                person: {
-                    firstName: viewer.firstName,
-                    lastName: viewer.lastName,
-                },
-            },
-        };
-
-        // Update locally immediately
-        // It is REALLY important to not revalidate here
-        mutate(
-            async () => {
-                const error = handleMRIModifyFieldResult(
-                    await setMRITimeLapsText(viewer, mriId, text)
-                );
-                if (error) {
-                    return Promise.reject();
-                }
-                // Here I don't think returning the updated data via the server action makes sense...
-                // The best option would be to use a web socket anyways :)
-                return {
-                    ...mri,
-                    timeLapsText: text,
-                    lastEditedAction: updatedAction,
-                };
-            },
+    const updateWage = async (wageLowerBound: number, wageUpperBound: number, wageLevel: Level) => {
+        updateElement(
             {
-                optimisticData: {
-                    ...mri,
-                    timeLapsText: text,
-                    lastEditedAction: updatedAction,
-                },
-                rollbackOnError: true,
-                throwOnError: false,
-                revalidate: false,
-            }
-        );
-    };
-
-    const updatedescriptionText = async (text: string) => {
-        if (!mri?.id) return;
-
-        const now = new Date();
-        const updatedAction: Prisma.ActionGetPayload<ClassicLastActionPayload> = {
-            ...mri.lastEditedAction,
-            date: now,
-            user: {
-                id: viewer.id,
-                person: {
-                    firstName: viewer.firstName,
-                    lastName: viewer.lastName,
-                },
+                wageLowerBound: wageLowerBound,
+                wageUpperBound: wageUpperBound,
+                wageLevel: wageLevel,
             },
-        };
-
-        // Update locally immediately
-        // It is REALLY important to not revalidate here
-        try {
-            mutate(
-                async () => {
-                    const error = handleMRIModifyFieldResult(
-                        await setMRIDescriptionText(viewer, mriId, text)
-                    );
-                    // Here I don't think returning the updated data via the server action makes sense...
-                    // The best option would be to use a web socket anyways :)
-                    if (error) {
-                        return Promise.reject();
-                    }
-                    return {
-                        ...mri,
-                        descriptionText: text,
-                        lastEditedAction: updatedAction,
-                    };
-                },
-                {
-                    optimisticData: {
-                        ...mri,
-                        descriptionText: text,
-                        lastEditedAction: updatedAction,
-                    },
-                    rollbackOnError: true,
-                    throwOnError: false,
-                    revalidate: false,
-                }
-            );
-        } catch (e) {
-            console.error(e);
-        }
+            () => setMRIWage(viewer, mriId, wageLowerBound, wageUpperBound, wageLevel)
+        );
     };
 
     const requestMriValidationCallback = async () => {
@@ -582,21 +553,30 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                 {}
                             </div>
                             <div className="flex flex-col @sm:flex-row">
-                                <ImageElt
-                                    {...getDomain(
+                                <EditableImage<Domain>
+                                    initValue={
                                         mri?.mainDomain ??
-                                            mri?.study.information.domains[0] ??
-                                            DEFAULT_MRI_VALUES.mainDomain
-                                    )}
+                                        mri?.study.information.domains[0] ??
+                                        DEFAULT_MRI_VALUES.mainDomain
+                                    }
+                                    possibleValues={DOMAINS}
+                                    updateValue={updateDomain}
+                                    getValue={getDomain}
                                 />
+                                {/* TODO */}
                                 <ImageElt
-                                    {...getPay(
+                                    {...getWage(
                                         mri?.wageLowerBound ?? 0,
                                         mri?.wageUpperBound ?? 0,
                                         mri?.wageLevel ?? 'Medium'
                                     )}
                                 />
-                                <ImageElt {...getDifficulty(mri?.difficulty ?? 'Medium')} />
+                                <EditableImage<Level>
+                                    initValue={mri?.difficulty ?? Level.Medium}
+                                    possibleValues={LEVELS}
+                                    updateValue={updateDifficulty}
+                                    getValue={getDifficulty}
+                                />
                             </div>
                             <hr className="my-6 border-mri-separator" />
                             <section className="mb-5">

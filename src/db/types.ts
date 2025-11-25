@@ -1,7 +1,8 @@
 import { CompanySize, DeliverableStatus, Domain, Level, StudyProgressStep } from '@prisma/client';
 
 import { DOMAIN_IMAGES, DoubleImage } from './images';
-interface EnumInfo {
+
+export interface EnumInfo {
     display: string;
 }
 
