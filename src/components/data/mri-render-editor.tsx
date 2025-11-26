@@ -719,7 +719,7 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                     <hr className="my-6 border-mri-separator" />
 
                     <p className="text-center">
-                        This email was send to{' '}
+                        This email was sent to{' '}
                         <Link href="mailto:exemple@telecom-etude.fr" className="text-mri-emphasis">
                             exemple@telecom-etude.fr
                         </Link>
