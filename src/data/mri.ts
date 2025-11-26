@@ -521,6 +521,32 @@ export async function setMRIWage(
     }
 }
 
+export async function setMRIGformUrl(
+    viewer: Viewer,
+    mriId: string,
+    url: string
+): Promise<MRIModifyFieldResult> {
+    const ids = (
+        await prisma.mri.updateManyAndReturn({
+            where: isMriEditable(viewer, mriId),
+            data: {
+                gformUrl: url,
+            },
+            select: {
+                id: true,
+            },
+        })
+    ).map((el) => el.id);
+
+    registerViewerActionOnMRIs(viewer, ids);
+
+    if (ids.length > 0) {
+        return { status: 'success' };
+    } else {
+        return { status: 'error', error: MRIModifyFieldErrorCode.NoMRIOrLocked };
+    }
+}
+
 export async function createEmptyStudyMRI(
     viewer: Viewer,
     studyCode: string

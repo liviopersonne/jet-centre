@@ -353,6 +353,17 @@ export function MRIValidator({ mriId }: { mriId: string }) {
                             </section>
                             <hr className="my-6 border-mri-separator" />
                             <div className="flex flex-col items-center">
+                                {mri?.gformUrl && (
+                                    <Button asChild className="w-fit mb-6 bg-je-red font-semibold">
+                                        <Link
+                                            href={mri.gformUrl}
+                                            target="_blank"
+                                            className="p-4 rounded"
+                                        >
+                                            Je réponds au formulaire
+                                        </Link>
+                                    </Button>
+                                )}
                                 <Button asChild className="w-fit mb-6 bg-je-red font-semibold">
                                     <Link href="#" className="p-4 rounded">
                                         Je postule !
