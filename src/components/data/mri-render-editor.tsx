@@ -155,7 +155,10 @@ function EditableImage<T extends string | number | symbol>({
     return (
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-                <Button variant={'outline'} className="bg-transparent hover:bg-transparent h-56">
+                <Button
+                    variant={'outline'}
+                    className="flex-1 bg-transparent hover:bg-transparent min-w-0 h-full"
+                >
                     <ImageElt {...getValue(value)} />
                 </Button>
             </DropdownMenuTrigger>
@@ -549,7 +552,7 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
 
                                 {}
                             </div>
-                            <div className="flex flex-col @sm:flex-row">
+                            <div className="flex flex-col @sm:flex-row items-stretch">
                                 <EditableImage<Domain>
                                     initValue={
                                         mri?.mainDomain ??
