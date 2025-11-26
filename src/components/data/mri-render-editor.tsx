@@ -35,6 +35,7 @@ import {
     setMRIRequiredSkillsText,
     setMRITimeLapsText,
     setMRITitle,
+    setMRIGformUrl,
 } from '@/data/mri';
 import { DEFAULT_MRI_VALUES } from '@/data/mri-defaults';
 import { DOMAINS, EnumInfo, LEVELS } from '@/db/types';
@@ -422,6 +423,15 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
         );
     };
 
+    const updateGformUrl = async (url: string) => {
+        updateElement(
+            {
+                gformUrl: url,
+            },
+            () => setMRIGformUrl(viewer, mriId, url)
+        );
+    };
+
     const requestMriValidationCallback = async () => {
         if (!mri?.id) return;
 
@@ -676,6 +686,23 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                         <Skeleton className="h-[1.25rem] w-[200px]" />
                                     </div>
                                 )}
+                            </section>
+                            <section className="mb-5">
+                                <h4 className={h4cn}>Lien du google form</h4>
+                                <div className="outline-1 outline-dashed items-center px-4 py-1">
+                                    {!wageLoading ? (
+                                        <EditableText
+                                            initText={mri?.gformUrl ?? ''}
+                                            updateText={updateGformUrl}
+                                            placeholder={'https://docs.google.com/forms/d/e/...'}
+                                            editable={editable}
+                                        />
+                                    ) : (
+                                        <div className="w-full">
+                                            <Skeleton className="h-[1.5rem] w-full" />
+                                        </div>
+                                    )}
+                                </div>
                             </section>
                             <hr className="my-6 border-mri-separator" />
                             <div className="flex flex-col items-center">
