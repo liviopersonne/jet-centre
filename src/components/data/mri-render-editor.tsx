@@ -115,7 +115,7 @@ function EditableText({
     };
 
     return (
-        <div className="w-full">
+        <div className="flex w-full">
             {editable ? (
                 <TextareaAutosize
                     value={text}
@@ -217,6 +217,7 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
 
     const titleLoading = isLoading || mri === undefined || mri === null;
     const introductionLoading = isLoading || mri === undefined || mri === null;
+    const wageLoading = isLoading || mri === undefined || mri === null;
     const requiredSkillsLoading = isLoading || mri === undefined || mri === null;
     const timeLapsTextLoading = isLoading || mri === undefined || mri === null;
     const descriptionTextLoading = isLoading || mri === undefined || mri === null;
@@ -400,7 +401,17 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
         );
     };
 
-    const updateWage = async (wageLowerBound: number, wageUpperBound: number, wageLevel: Level) => {
+    const updateWage = async ({
+        wageLowerBound = mri?.wageLowerBound ?? 0,
+        wageUpperBound = mri?.wageUpperBound ?? 0,
+        wageLevel = mri?.wageLevel ?? Level.Medium,
+    }: {
+        wageLowerBound?: number;
+        wageUpperBound?: number;
+        wageLevel?: Level;
+    }) => {
+        if (Number.isNaN(wageLowerBound) || wageLowerBound < 0) return;
+        if (Number.isNaN(wageUpperBound) || wageUpperBound < 0) return;
         updateElement(
             {
                 wageLowerBound: wageLowerBound,
@@ -566,13 +577,7 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                 <EditableImage<Level>
                                     initValue={mri?.wageLevel ?? Level.Medium}
                                     possibleValues={LEVELS}
-                                    updateValue={(l) =>
-                                        updateWage(
-                                            mri?.wageLowerBound ?? 0,
-                                            mri?.wageUpperBound ?? 0,
-                                            l
-                                        )
-                                    }
+                                    updateValue={(l) => updateWage({ wageLevel: l })}
                                     getValue={(l) =>
                                         getWage(
                                             mri?.wageLowerBound ?? 0,
@@ -587,6 +592,38 @@ export function MRIRenderEditor({ mriId }: { mriId: string }) {
                                     updateValue={updateDifficulty}
                                     getValue={getDifficulty}
                                 />
+                            </div>
+                            <div className="flex flex-row mt-6 gap-2 outline-1 outline-dashed items-center px-4 py-1">
+                                <h1 className="w-full">Rétribution basse: </h1>
+                                {!wageLoading ? (
+                                    <EditableText
+                                        initText={(mri?.wageLowerBound ?? 0).toString()}
+                                        updateText={(w) =>
+                                            updateWage({ wageLowerBound: parseInt(w) })
+                                        }
+                                        placeholder={'0'}
+                                        editable={editable}
+                                    />
+                                ) : (
+                                    <div className="w-full">
+                                        <Skeleton className="h-[1.5rem] w-[100px]" />
+                                    </div>
+                                )}
+                                <h1 className="w-full">Rétribution haute: </h1>
+                                {!wageLoading ? (
+                                    <EditableText
+                                        initText={(mri?.wageUpperBound ?? 0).toString()}
+                                        updateText={(w) =>
+                                            updateWage({ wageUpperBound: parseInt(w) })
+                                        }
+                                        placeholder={'0'}
+                                        editable={editable}
+                                    />
+                                ) : (
+                                    <div className="w-full">
+                                        <Skeleton className="h-[1.5rem] w-[100px]" />
+                                    </div>
+                                )}
                             </div>
                             <hr className="my-6 border-mri-separator" />
                             <section className="mb-5">
