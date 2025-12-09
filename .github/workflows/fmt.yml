@@ -16,13 +16,11 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Prettier install
-              run: npm install prettier prettier-plugin-prisma --save-dev
+            - name: Install Node.js
+              uses: oven-sh/setup-bun@v2
 
-            - name: Prettify code
-              uses: creyD/prettier_action@v4.6
-              with:
-                  dry: true
-                  no_commit: true
-                  allow_other_plugins: true
-                  prettier_options: --c .
+            - name: Install dependencies
+              run: bun i
+
+            - name: Check code format
+              run: bun x prettier --check .
